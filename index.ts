@@ -35,7 +35,7 @@ const TOOLS: Tool[] = [
       properties: {
         name: { type: "string", description: "Name for the screenshot" },
         selector: { type: "string", description: "CSS selector for element to screenshot" },
-        fullPage: { type: "boolean", description: "Take a full page screenshot (default: false)" },
+        fullPage: { type: "boolean", description: "Take a full page screenshot (default: false)", default: false },
       },
       required: ["name"],
     },
@@ -139,7 +139,7 @@ async function handleToolCall(name: string, args: any): Promise<{ toolResult: Ca
       };
 
     case "playwright_screenshot": {
-      const fullPage = args.fullPage ?? false;
+      const fullPage = (args.fullPage === 'true');
 
       const screenshot = await (args.selector ?
         page.locator(args.selector).screenshot() :

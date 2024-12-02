@@ -70,7 +70,7 @@ Here's the Claude Desktop configuration to use the Puppeter server:
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-playwright"]
+      "args": ["-y", "@automatalabs/mcp-server-playwright"]
     }
   }
 }

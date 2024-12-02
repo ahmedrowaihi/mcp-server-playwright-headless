@@ -5,7 +5,7 @@
   "license": "MIT",
   "author": "Automata Labs (https://automatalabs.io)",
   "homepage": "https://automatalabs.io",
-  "bugs": "https://github.com/automatalabs/mcp-server-playwright/issues",
+  "bugs": "https://github.com/Automata-Labs-team/MCP-Server-Playwright/issues",
   "type": "module",
   "bin": {
     "mcp-server-playwright": "dist/index.js"

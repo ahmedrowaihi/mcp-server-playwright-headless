@@ -5,6 +5,12 @@
   "license": "MIT",
   "author": "Automata Labs (https://automatalabs.io)",
   "homepage": "https://automatalabs.io",
+  {
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/Automata-Labs-team/MCP-Server-Playwright.git"
+    }
+  },
   "bugs": "https://github.com/Automata-Labs-team/MCP-Server-Playwright/issues",
   "type": "module",
   "bin": {

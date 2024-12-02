@@ -1,3 +1,12 @@
+## [0.6.2](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.6.1...v0.6.2) (2024-12-02)
+
+
+### Bug Fixes
+
+* Update npm-publish.yml ([048cbef](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/048cbefbaf5b965fd284c01c53b01f7de4c87c6b))
+
+
+
 ## [0.6.1](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.6.0...v0.6.1) (2024-12-02)
 
 

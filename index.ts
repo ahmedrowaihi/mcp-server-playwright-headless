@@ -255,8 +255,7 @@ async function handleToolCall(name: string, args: any): Promise<{ toolResult: Ca
 
     case "playwright_hover":
       try {
-        await page.waitForSelector(args.selector);
-        await page.hover(args.selector);
+        await page.locator(args.selector).hover();
         return {
           toolResult: {
             content: [{

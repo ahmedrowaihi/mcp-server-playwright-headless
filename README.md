@@ -32,6 +32,7 @@
 ## Installation
 
 ```bash
+npx playwright install
 npm install -g @automatalabs/mcp-server-playwright
 ```
 

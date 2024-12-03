@@ -1,3 +1,12 @@
+## [0.6.4](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.6.3...v0.6.4) (2024-12-03)
+
+
+### Bug Fixes
+
+* update hover to use locator ([1853059](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/185305904a117b6cc4298b002b253563f8afdd92))
+
+
+
 ## [0.6.3](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.6.2...v0.6.3) (2024-12-02)
 
 

@@ -69,8 +69,7 @@ Capture screenshots of the entire page or specific elements
 {
   "name": "screenshot-name",     // required
   "selector": "#element-id",     // optional
-  "width": 800,                 // optional, default: 800
-  "height": 600                 // optional, default: 600
+  "fullPage": true              // optional, default: false
 }
 ```
 

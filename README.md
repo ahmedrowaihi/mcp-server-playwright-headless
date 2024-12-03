@@ -1,69 +1,43 @@
-# Playwright Model Context Protocol Server
+<h1 align="center">MCP Server Playwright</h1>
 
-A Model Context Protocol server that provides browser automation capabilities using Playwright. This server enables LLMs to interact with web pages, take screenshots, and execute JavaScript in a real browser environment.
+<p align="center">
+  <b>A Model Context Protocol server that provides browser automation capabilities using Playwright</b></br>
+  <sub>Enable LLMs to interact with web pages, take screenshots, and execute JavaScript in a real browser environment</sub>
+</p>
 
-## Components
+<p align="center">
+  <a href="https://www.npmjs.com/package/@automatalabs/mcp-server-playwright"><img alt="NPM Version" src="https://img.shields.io/npm/v/@automatalabs/mcp-server-playwright.svg" height="20"/></a>
+  <a href="https://npmcharts.com/compare/@automatalabs/mcp-server-playwright?minimal=true"><img alt="Downloads per month" src="https://img.shields.io/npm/dm/@automatalabs/mcp-server-playwright.svg" height="20"/></a>
+  <a href="https://github.com/Automata-Labs-team/MCP-Server-Playwright/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/Automata-Labs-team/MCP-Server-Playwright.svg" height="20"/></a>
+</p>
 
-### Tools
+## Table of Contents
 
-- **playwright_navigate**
-  - Navigate to any URL in the browser
-  - Input: `url` (string)
+- [Features](#features)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Components](#components)
+  - [Tools](#tools)
+  - [Resources](#resources)
+- [License](#license)
 
-- **playwright_screenshot**
-  - Capture screenshots of the entire page or specific elements
-  - Inputs:
-    - `name` (string, required): Name for the screenshot
-    - `selector` (string, optional): CSS selector for element to screenshot
-    - `width` (number, optional, default: 800): Screenshot width
-    - `height` (number, optional, default: 600): Screenshot height
+## Features
 
-- **playwright_click**
-  - Click elements on the page
-  - Input: `selector` (string): CSS selector for element to click
+- 🌐 Full browser automation capabilities
+- 📸 Screenshot capture of entire pages or specific elements
+- 🖱️ Comprehensive web interaction (navigation, clicking, form filling)
+- 📊 Console log monitoring
+- 🔧 JavaScript execution in browser context
 
-- **playwright_hover**
-  - Hover elements on the page
-  - Input: `selector` (string): CSS selector for element to hover
+## Installation
 
-- **playwright_fill**
-  - Fill out input fields
-  - Inputs:
-    - `selector` (string): CSS selector for input field
-    - `value` (string): Value to fill
+```bash
+npm install -g @automatalabs/mcp-server-playwright
+```
 
-- **playwright_select**
-  - Select an element with SELECT tag
-  - Inputs:
-    - `selector` (string): CSS selector for element to select
-    - `value` (string): Value to select
+## Configuration
 
-- **playwright_evaluate**
-  - Execute JavaScript in the browser console
-  - Input: `script` (string): JavaScript code to execute
-
-### Resources
-
-The server provides access to two types of resources:
-
-1. **Console Logs** (`console://logs`)
-   - Browser console output in text format
-   - Includes all console messages from the browser
-
-2. **Screenshots** (`screenshot://<name>`)
-   - PNG images of captured screenshots
-   - Accessible via the screenshot name specified during capture
-
-## Key Features
-
-- Browser automation
-- Console log monitoring
-- Screenshot capabilities
-- JavaScript execution
-- Basic web interaction (navigation, clicking, form filling)
-
-## Configuration to use Playwright Server
-Here's the Claude Desktop configuration to use the Puppeter server:
+To use the Playwright server with Claude Desktop, add the following configuration:
 
 ```json
 {
@@ -76,6 +50,81 @@ Here's the Claude Desktop configuration to use the Puppeter server:
 }
 ```
 
+## Components
+
+### Tools
+
+#### `playwright_navigate`
+Navigate to any URL in the browser
+```javascript
+{
+  "url": "https://stealthbrowser.cloud"
+}
+```
+
+#### `playwright_screenshot`
+Capture screenshots of the entire page or specific elements
+```javascript
+{
+  "name": "screenshot-name",     // required
+  "selector": "#element-id",     // optional
+  "width": 800,                 // optional, default: 800
+  "height": 600                 // optional, default: 600
+}
+```
+
+#### `playwright_click`
+Click elements on the page
+```javascript
+{
+  "selector": "#button-id"
+}
+```
+
+#### `playwright_hover`
+Hover over elements on the page
+```javascript
+{
+  "selector": "#menu-item"
+}
+```
+
+#### `playwright_fill`
+Fill out input fields
+```javascript
+{
+  "selector": "#input-field",
+  "value": "Hello World"
+}
+```
+
+#### `playwright_select`
+Select an option in a SELECT element
+```javascript
+{
+  "selector": "#dropdown",
+  "value": "option-value"
+}
+```
+
+#### `playwright_evaluate`
+Execute JavaScript in the browser console
+```javascript
+{
+  "script": "document.title"
+}
+```
+
+### Resources
+
+1. **Console Logs** (`console://logs`)
+   - Access browser console output in text format
+   - Includes all console messages from the browser
+
+2. **Screenshots** (`screenshot://<name>`)
+   - Access PNG images of captured screenshots
+   - Referenced by the name specified during capture
+
 ## License
 
-This MCP server is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the LICENSE file in the project repository.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/Automata-Labs-team/MCP-Server-Playwright/blob/main/LICENSE) file for details.

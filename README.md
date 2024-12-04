@@ -76,18 +76,34 @@ Capture screenshots of the entire page or specific elements
 ```
 
 #### `playwright_click`
-Click elements on the page
+Click elements on the page using CSS selector
 ```javascript
 {
   "selector": "#button-id"
 }
 ```
 
+#### `playwright_click_text`
+Click elements on the page by their text content
+```javascript
+{
+  "text": "Click me"
+}
+```
+
 #### `playwright_hover`
-Hover over elements on the page
+Hover over elements on the page using CSS selector
 ```javascript
 {
   "selector": "#menu-item"
+}
+```
+
+#### `playwright_hover_text`
+Hover over elements on the page by their text content
+```javascript
+{
+  "text": "Hover me"
 }
 ```
 
@@ -101,10 +117,19 @@ Fill out input fields
 ```
 
 #### `playwright_select`
-Select an option in a SELECT element
+Select an option in a SELECT element using CSS selector
 ```javascript
 {
   "selector": "#dropdown",
+  "value": "option-value"
+}
+```
+
+#### `playwright_select_text`
+Select an option in a SELECT element by its text content
+```javascript
+{
+  "text": "Choose me",
   "value": "option-value"
 }
 ```

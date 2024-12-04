@@ -189,6 +189,28 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
           isError: false,
         };
       } catch (error) {
+        if((error as Error).message.includes("strict mode violation")) {
+            console.log("Strict mode violation, retrying on first element...");
+            try {
+                await page.locator(args.selector).first().click();
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Clicked: ${args.selector}`,
+                    }],
+                    isError: false,
+                };
+            } catch (error) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Failed (twice) to click ${args.selector}: ${(error as Error).message}`,
+                    }],
+                    isError: true,
+                };
+            }
+        }
+        
         return {
           content: [{
             type: "text",
@@ -209,6 +231,27 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
           isError: false,
         };
       } catch (error) {
+        if((error as Error).message.includes("strict mode violation")) {
+            console.log("Strict mode violation, retrying on first element...");
+            try {
+                await page.locator(args.selector).first().pressSequentially(args.value, { delay: 100 });
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Filled ${args.selector} with: ${args.value}`,
+                    }],
+                    isError: false,
+                };
+            } catch (error) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Failed (twice) to fill ${args.selector}: ${(error as Error).message}`,
+                    }],
+                    isError: true,
+                };
+            }
+        }
         return {
           content: [{
             type: "text",
@@ -229,6 +272,27 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
           isError: false,
         };
       } catch (error) {
+        if((error as Error).message.includes("strict mode violation")) {
+            console.log("Strict mode violation, retrying on first element...");
+            try {
+                await page.locator(args.selector).first().selectOption(args.value);
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Selected ${args.selector} with: ${args.value}`,
+                    }],
+                    isError: false,
+                };
+            } catch (error) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Failed (twice) to select ${args.selector}: ${(error as Error).message}`,
+                    }],
+                    isError: true,
+                };
+            }
+        }
         return {
           content: [{
             type: "text",
@@ -249,6 +313,27 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
           isError: false,
         };
       } catch (error) {
+        if((error as Error).message.includes("strict mode violation")) {
+            console.log("Strict mode violation, retrying on first element...");
+            try {
+                await page.locator(args.selector).first().hover();
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Hovered ${args.selector}`,
+                    }],
+                    isError: false,
+                };
+            } catch (error) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Failed to hover ${args.selector}: ${(error as Error).message}`,
+                    }],
+                    isError: true,
+                };
+            }
+        }
         return {
           content: [{
             type: "text",

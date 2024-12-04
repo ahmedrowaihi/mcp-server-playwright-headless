@@ -1,5 +1,7 @@
 <h1 align="center">MCP Server Playwright</h1>
-
+<p align="center">
+  <a href="https://www.automatalabs.io"><img alt="MCP Playwright" src="https://automatalabs.io/icon.svg" height="250"/></a>
+</p>
 <p align="center">
   <b>A Model Context Protocol server that provides browser automation capabilities using Playwright</b></br>
   <sub>Enable LLMs to interact with web pages, take screenshots, and execute JavaScript in a real browser environment</sub>

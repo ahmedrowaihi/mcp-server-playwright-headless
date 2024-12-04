@@ -108,17 +108,20 @@ const screenshots = new Map<string, string>();
 async function ensureBrowser() {
   if (!browser) {
     browser = await playwright.firefox.launch({ headless: false });
-    page = await browser.newPage();
-
-    page.on("console", (msg) => {
-      const logEntry = `[${msg.type()}] ${msg.text()}`;
-      consoleLogs.push(logEntry);
-      server.notification({
-        method: "notifications/resources/updated",
-        params: { uri: "console://logs" },
-      });
-    });
   }
+
+  if (!page) {
+    page = await browser.newPage();
+  }
+
+  page.on("console", (msg) => {
+    const logEntry = `[${msg.type()}] ${msg.text()}`;
+    consoleLogs.push(logEntry);
+    server.notification({
+      method: "notifications/resources/updated",
+      params: { uri: "console://logs" },
+    });
+  });
   return page!;
 }
 

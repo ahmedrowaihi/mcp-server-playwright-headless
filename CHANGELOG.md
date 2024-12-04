@@ -1,3 +1,12 @@
+## [0.7.1](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.7.0...v0.7.1) (2024-12-04)
+
+
+### Bug Fixes
+
+* update ensureBrowser function to be more resilient in case browser/page is closed during chat ([1886924](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/1886924a42d789e9fa1e6257a1143034a8047de1))
+
+
+
 # [0.7.0](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.6.5...v0.7.0) (2024-12-04)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * Update npm-publish.yml ([cfa1cf4](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/cfa1cf47998a520abe88cf9a828d886c9884f273))
-
-
-
-## [0.6.2](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.6.1...v0.6.2) (2024-12-02)
-
-
-### Bug Fixes
-
-* Update npm-publish.yml ([048cbef](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/048cbefbaf5b965fd284c01c53b01f7de4c87c6b))
 
 
 

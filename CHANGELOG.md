@@ -1,3 +1,12 @@
+# [0.8.0](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.7.2...v0.8.0) (2024-12-04)
+
+
+### Features
+
+* **playwright:** add text-based interaction tools ([75ab511](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/75ab511ce31f66acc2734f8fcf65c3a06b9802ea))
+
+
+
 ## [0.7.2](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.7.1...v0.7.2) (2024-12-04)
 
 
@@ -31,15 +40,6 @@
 ### Reverts
 
 * undo add package.json publish script ([a3f148b](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/a3f148b511e91c8b8af6893e5e9eab842e03283e))
-
-
-
-## [0.6.4](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.6.3...v0.6.4) (2024-12-03)
-
-
-### Bug Fixes
-
-* update hover to use locator ([1853059](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/185305904a117b6cc4298b002b253563f8afdd92))
 
 
 

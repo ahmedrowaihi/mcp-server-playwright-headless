@@ -42,13 +42,24 @@ const TOOLS: Tool[] = [
   },
   {
     name: "playwright_click",
-    description: "Click an element on the page",
+    description: "Click an element on the page using CSS selector",
     inputSchema: {
       type: "object",
       properties: {
         selector: { type: "string", description: "CSS selector for element to click" },
       },
       required: ["selector"],
+    },
+  },
+  {
+    name: "playwright_click_text",
+    description: "Click an element on the page by its text content",
+    inputSchema: {
+      type: "object",
+      properties: {
+        text: { type: "string", description: "Text content of the element to click" },
+      },
+      required: ["text"],
     },
   },
   {
@@ -65,7 +76,7 @@ const TOOLS: Tool[] = [
   },
   {
     name: "playwright_select",
-    description: "Select an element on the page with Select tag",
+    description: "Select an element on the page with Select tag using CSS selector",
     inputSchema: {
       type: "object",
       properties: {
@@ -76,14 +87,37 @@ const TOOLS: Tool[] = [
     },
   },
   {
+    name: "playwright_select_text",
+    description: "Select an element on the page with Select tag by its text content",
+    inputSchema: {
+      type: "object",
+      properties: {
+        text: { type: "string", description: "Text content of the element to select" },
+        value: { type: "string", description: "Value to select" },
+      },
+      required: ["text", "value"],
+    },
+  },
+  {
     name: "playwright_hover",
-    description: "Hover an element on the page",
+    description: "Hover an element on the page using CSS selector",
     inputSchema: {
       type: "object",
       properties: {
         selector: { type: "string", description: "CSS selector for element to hover" },
       },
       required: ["selector"],
+    },
+  },
+  {
+    name: "playwright_hover_text",
+    description: "Hover an element on the page by its text content",
+    inputSchema: {
+      type: "object",
+      properties: {
+        text: { type: "string", description: "Text content of the element to hover" },
+      },
+      required: ["text"],
     },
   },
   {
@@ -220,6 +254,47 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
         };
       }
 
+    case "playwright_click_text":
+      try {
+        await page.getByText(args.text).click();
+        return {
+          content: [{
+            type: "text",
+            text: `Clicked element with text: ${args.text}`,
+          }],
+          isError: false,
+        };
+      } catch (error) {
+        if((error as Error).message.includes("strict mode violation")) {
+            console.log("Strict mode violation, retrying on first element...");
+            try {
+                await page.getByText(args.text).first().click();
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Clicked element with text: ${args.text}`,
+                    }],
+                    isError: false,
+                };
+            } catch (error) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Failed (twice) to click element with text ${args.text}: ${(error as Error).message}`,
+                    }],
+                    isError: true,
+                };
+            }
+        }
+        return {
+          content: [{
+            type: "text",
+            text: `Failed to click element with text ${args.text}: ${(error as Error).message}`,
+          }],
+          isError: true,
+        };
+      }
+
     case "playwright_fill":
       try {
         await page.locator(args.selector).pressSequentially(args.value, { delay: 100 });
@@ -302,6 +377,47 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
         };
       }
 
+    case "playwright_select_text":
+      try {
+        await page.getByText(args.text).selectOption(args.value);
+        return {
+          content: [{
+            type: "text",
+            text: `Selected element with text ${args.text} with value: ${args.value}`,
+          }],
+          isError: false,
+        };
+      } catch (error) {
+        if((error as Error).message.includes("strict mode violation")) {
+            console.log("Strict mode violation, retrying on first element...");
+            try {
+                await page.getByText(args.text).first().selectOption(args.value);
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Selected element with text ${args.text} with value: ${args.value}`,
+                    }],
+                    isError: false,
+                };
+            } catch (error) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Failed (twice) to select element with text ${args.text}: ${(error as Error).message}`,
+                    }],
+                    isError: true,
+                };
+            }
+        }
+        return {
+          content: [{
+            type: "text",
+            text: `Failed to select element with text ${args.text}: ${(error as Error).message}`,
+          }],
+          isError: true,
+        };
+      }
+
     case "playwright_hover":
       try {
         await page.locator(args.selector).hover();
@@ -339,6 +455,47 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
             type: "text",
               text: `Failed to hover ${args.selector}: ${(error as Error).message}`,
             }],
+          isError: true,
+        };
+      }
+
+    case "playwright_hover_text":
+      try {
+        await page.getByText(args.text).hover();
+        return {
+          content: [{
+            type: "text",
+            text: `Hovered element with text: ${args.text}`,
+          }],
+          isError: false,
+        };
+      } catch (error) {
+        if((error as Error).message.includes("strict mode violation")) {
+            console.log("Strict mode violation, retrying on first element...");
+            try {
+                await page.getByText(args.text).first().hover();
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Hovered element with text: ${args.text}`,
+                    }],
+                    isError: false,
+                };
+            } catch (error) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: `Failed (twice) to hover element with text ${args.text}: ${(error as Error).message}`,
+                    }],
+                    isError: true,
+                };
+            }
+        }
+        return {
+          content: [{
+            type: "text",
+            text: `Failed to hover element with text ${args.text}: ${(error as Error).message}`,
+          }],
           isError: true,
         };
       }

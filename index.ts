@@ -122,20 +122,18 @@ async function ensureBrowser() {
   return page!;
 }
 
-async function handleToolCall(name: string, args: any): Promise<{ toolResult: CallToolResult }> {
+async function handleToolCall(name: string, args: any): Promise<CallToolResult> {
   const page = await ensureBrowser();
 
   switch (name) {
     case "playwright_navigate":
       await page.goto(args.url);
       return {
-        toolResult: {
-          content: [{
-            type: "text",
+        content: [{
+          type: "text",
             text: `Navigated to ${args.url}`,
           }],
-          isError: false,
-        },
+        isError: false,
       };
 
     case "playwright_screenshot": {
@@ -148,13 +146,11 @@ async function handleToolCall(name: string, args: any): Promise<{ toolResult: Ca
 
       if (!base64Screenshot) {
         return {
-          toolResult: {
-            content: [{
-              type: "text",
-              text: args.selector ? `Element not found: ${args.selector}` : "Screenshot failed",
-            }],
-            isError: true,
-          },
+          content: [{
+            type: "text",
+            text: args.selector ? `Element not found: ${args.selector}` : "Screenshot failed",
+          }],
+          isError: true,
         };
       }
 
@@ -164,20 +160,18 @@ async function handleToolCall(name: string, args: any): Promise<{ toolResult: Ca
       });
 
       return {
-        toolResult: {
-          content: [
-            {
-              type: "text",
-              text: `Screenshot '${args.name}' taken`,
-            } as TextContent,
-            {
-              type: "image",
+        content: [
+          {
+            type: "text",
+            text: `Screenshot '${args.name}' taken`,
+          } as TextContent,
+          {
+            type: "image",
               data: base64Screenshot,
               mimeType: "image/png",
             } as ImageContent,
           ],
-          isError: false,
-        },
+        isError: false,
       };
     }
 
@@ -185,23 +179,19 @@ async function handleToolCall(name: string, args: any): Promise<{ toolResult: Ca
       try {
         await page.locator(args.selector).click();
         return {
-          toolResult: {
-            content: [{
-              type: "text",
-              text: `Clicked: ${args.selector}`,
-            }],
-            isError: false,
-          },
+          content: [{
+            type: "text",
+            text: `Clicked: ${args.selector}`,
+          }],
+          isError: false,
         };
       } catch (error) {
         return {
-          toolResult: {
-            content: [{
-              type: "text",
-              text: `Failed to click ${args.selector}: ${(error as Error).message}`,
-            }],
-            isError: true,
-          },
+          content: [{
+            type: "text",
+            text: `Failed to click ${args.selector}: ${(error as Error).message}`,
+          }],
+          isError: true,
         };
       }
 
@@ -209,23 +199,19 @@ async function handleToolCall(name: string, args: any): Promise<{ toolResult: Ca
       try {
         await page.locator(args.selector).pressSequentially(args.value, { delay: 100 });
         return {
-          toolResult: {
-            content: [{
-              type: "text",
+          content: [{
+            type: "text",
               text: `Filled ${args.selector} with: ${args.value}`,
             }],
-            isError: false,
-          },
+          isError: false,
         };
       } catch (error) {
         return {
-          toolResult: {
-            content: [{
-              type: "text",
+          content: [{
+            type: "text",
               text: `Failed to fill ${args.selector}: ${(error as Error).message}`,
             }],
-            isError: true,
-          },
+          isError: true,
         };
       }
 
@@ -233,23 +219,19 @@ async function handleToolCall(name: string, args: any): Promise<{ toolResult: Ca
       try {
         await page.locator(args.selector).selectOption(args.value);
         return {
-          toolResult: {
-            content: [{
-              type: "text",
+          content: [{
+            type: "text",
               text: `Selected ${args.selector} with: ${args.value}`,
             }],
-            isError: false,
-          },
+          isError: false,
         };
       } catch (error) {
         return {
-          toolResult: {
-            content: [{
-              type: "text",
+          content: [{
+            type: "text",
               text: `Failed to select ${args.selector}: ${(error as Error).message}`,
             }],
-            isError: true,
-          },
+          isError: true,
         };
       }
 
@@ -257,23 +239,19 @@ async function handleToolCall(name: string, args: any): Promise<{ toolResult: Ca
       try {
         await page.locator(args.selector).hover();
         return {
-          toolResult: {
-            content: [{
-              type: "text",
+          content: [{
+            type: "text",
               text: `Hovered ${args.selector}`,
             }],
-            isError: false,
-          },
+          isError: false,
         };
       } catch (error) {
         return {
-          toolResult: {
-            content: [{
-              type: "text",
+          content: [{
+            type: "text",
               text: `Failed to hover ${args.selector}: ${(error as Error).message}`,
             }],
-            isError: true,
-          },
+          isError: true,
         };
       }
 
@@ -301,37 +279,31 @@ async function handleToolCall(name: string, args: any): Promise<{ toolResult: Ca
         }, args.script);
 
         return {
-          toolResult: {
-            content: [
-              {
+          content: [
+            {
                 type: "text",
                 text: `Execution result:\n${JSON.stringify(result.result, null, 2)}\n\nConsole output:\n${result.logs.join('\n')}`,
               },
             ],
-            isError: false,
-          },
+          isError: false,
         };
       } catch (error) {
         return {
-          toolResult: {
-            content: [{
-              type: "text",
+          content: [{
+            type: "text",
               text: `Script execution failed: ${(error as Error).message}`,
             }],
-            isError: true,
-          },
+          isError: true,
         };
       }
 
     default:
       return {
-        toolResult: {
-          content: [{
-            type: "text",
+        content: [{
+          type: "text",
             text: `Unknown tool: ${name}`,
           }],
-          isError: true,
-        },
+        isError: true,
       };
   }
 }

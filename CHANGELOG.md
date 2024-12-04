@@ -1,3 +1,12 @@
+## [0.7.2](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.7.1...v0.7.2) (2024-12-04)
+
+
+### Bug Fixes
+
+* **handleToolCall:** make handleToolCall functions that interact with elements retry in the case that strict mode violations are encountered ([579744b](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/579744b8c7c6034cd8334f32f22e5053cc0232e7))
+
+
+
 ## [0.7.1](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.7.0...v0.7.1) (2024-12-04)
 
 
@@ -31,15 +40,6 @@
 ### Bug Fixes
 
 * update hover to use locator ([1853059](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/185305904a117b6cc4298b002b253563f8afdd92))
-
-
-
-## [0.6.3](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.6.2...v0.6.3) (2024-12-02)
-
-
-### Bug Fixes
-
-* Update npm-publish.yml ([cfa1cf4](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/cfa1cf47998a520abe88cf9a828d886c9884f273))
 
 
 

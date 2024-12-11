@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+import yargs from "yargs/yargs";
+import { hideBin } from 'yargs/helpers'
+import os from "os";
+import path from "path";
+import { promises as fs } from "fs";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -613,17 +618,128 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   throw new Error(`Resource not found: ${uri}`);
 });
 
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: TOOLS,
-}));
 
-server.setRequestHandler(CallToolRequestSchema, async (request) =>
-  handleToolCall(request.params.name, request.params.arguments ?? {})
-);
 
 async function runServer() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: TOOLS,
+  }));
+  
+  server.setRequestHandler(CallToolRequestSchema, async (request) =>
+    handleToolCall(request.params.name, request.params.arguments ?? {})
+  );
 }
 
-runServer().catch(console.error);
+async function checkPlatformAndInstall() {
+  const platform = os.platform();
+  if (platform === "win32") {
+    console.log("Installing MCP Playwright Server for Windows...");
+    try {
+      const configFilePath = path.join(os.homedir(), 'AppData', 'Roaming', 'Claude', 'claude_desktop_config.json');
+      
+      let config: any;
+      try {
+        // Try to read existing config file
+        const fileContent = await fs.readFile(configFilePath, 'utf-8');
+        config = JSON.parse(fileContent);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+          // Create new config file with mcpServers object
+          config = { mcpServers: {} };
+          await fs.writeFile(configFilePath, JSON.stringify(config, null, 2), 'utf-8');
+          console.log("Created new Claude config file");
+        } else {
+          console.error("Error reading Claude config file:", error);
+          process.exit(1);
+        }
+      }
+
+      // Ensure mcpServers exists
+      if (!config.mcpServers) {
+        config.mcpServers = {};
+      }
+
+      // Update the playwright configuration
+      config.mcpServers.playwright = {
+        command: "npx",
+        args: ["-y", "@automatalabs/mcp-server-playwright"]
+      };
+
+      // Write the updated config back to file
+      await fs.writeFile(configFilePath, JSON.stringify(config, null, 2), 'utf-8');
+      console.log("✓ Successfully updated Claude configuration");
+      
+    } catch (error) {
+      console.error("Error during installation:", error);
+      process.exit(1);
+    }
+  } else if (platform === "darwin") {
+    console.log("Installing MCP Playwright Server for macOS...");
+    try {
+      const configFilePath = path.join(os.homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json');
+      
+      let config: any;
+      try {
+        // Try to read existing config file
+        const fileContent = await fs.readFile(configFilePath, 'utf-8');
+        config = JSON.parse(fileContent);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+          // Create new config file with mcpServers object
+          config = { mcpServers: {} };
+          await fs.writeFile(configFilePath, JSON.stringify(config, null, 2), 'utf-8');
+          console.log("Created new Claude config file");
+        } else {
+          console.error("Error reading Claude config file:", error);
+          process.exit(1);
+        }
+      }
+
+      // Ensure mcpServers exists
+      if (!config.mcpServers) {
+        config.mcpServers = {};
+      }
+
+      // Update the playwright configuration
+      config.mcpServers.playwright = {
+        command: "npx",
+        args: ["-y", "@automatalabs/mcp-server-playwright"]
+      };
+
+      // Write the updated config back to file
+      await fs.writeFile(configFilePath, JSON.stringify(config, null, 2), 'utf-8');
+      console.log("✓ Successfully updated Claude configuration");
+      
+    } catch (error) {
+      console.error("Error during installation:", error);
+      process.exit(1);
+    }
+  } else {
+    console.error("Unsupported platform:", platform);
+    process.exit(1);
+  }
+}
+
+(async () => {
+  try {
+    // Parse args but continue with server if no command specified
+    await yargs(hideBin(process.argv))
+      .command('install', 'Install MCP-Server-Playwright dependencies', () => {}, async () => {
+        await checkPlatformAndInstall();
+        // Exit after successful installation
+        process.exit(0);
+      })
+      .strict()
+      .help()
+      .parse();
+
+    // If we get here, no command was specified, so run the server
+    await runServer().catch(console.error);
+  } catch (error) {
+    console.error('Error:', error);
+    process.exit(1);
+  }
+})();

@@ -33,14 +33,24 @@
 
 ## Installation
 
+To install and configure MCP Server Playwright:
+
 ```bash
-npx playwright install
-npm install -g @automatalabs/mcp-server-playwright
+npx @automatalabs/mcp-server-playwright install
 ```
+
+This command will:
+1. Check your operating system compatibility (Windows/macOS)
+2. Create or update the Claude configuration file
+3. Configure the Playwright server integration
+
+The configuration file will be automatically created/updated at:
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
 ## Configuration
 
-To use the Playwright server with Claude Desktop, add the following configuration:
+The installation process will automatically add the following configuration to your Claude config file:
 
 ```json
 {

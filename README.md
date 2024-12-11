@@ -33,9 +33,17 @@
 
 ## Installation
 
+You can install the package using either npm or mcp-get:
+
+Using npm:
 ```bash
 npx playwright install
 npm install -g @automatalabs/mcp-server-playwright
+```
+
+Using mcp-get:
+```bash
+npx @michaellatman/mcp-get@latest install @automatalabs/mcp-server-playwright
 ```
 
 ## Configuration

@@ -32,13 +32,12 @@
 - 🔧 JavaScript execution in browser context
 
 ## Installation
+You can install the package using either npx or mcp-get:
 
-To install and configure MCP Server Playwright:
-
+Using npx:
 ```bash
 npx @automatalabs/mcp-server-playwright install
 ```
-
 This command will:
 1. Check your operating system compatibility (Windows/macOS)
 2. Create or update the Claude configuration file
@@ -47,6 +46,11 @@ This command will:
 The configuration file will be automatically created/updated at:
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+Using mcp-get:
+```bash
+npx @michaellatman/mcp-get@latest install @automatalabs/mcp-server-playwright
+```
 
 ## Configuration
 

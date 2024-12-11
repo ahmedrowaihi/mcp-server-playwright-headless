@@ -1,3 +1,12 @@
+# [0.9.0](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.8.0...v0.9.0) (2024-12-11)
+
+
+### Features
+
+* add Claude config file handling for Windows and macOS ([65b3ac3](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/65b3ac3ee5f5cc2d5600e1cec920db4b15e6287f))
+
+
+
 # [0.8.0](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.7.2...v0.8.0) (2024-12-04)
 
 
@@ -31,15 +40,6 @@
 ### Features
 
 * **server:** make tool call result spec compatible ([13141ba](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/13141ba44246e670bdc0214fe76b879f3683eebb))
-
-
-
-## [0.6.5](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.6.4...v0.6.5) (2024-12-03)
-
-
-### Reverts
-
-* undo add package.json publish script ([a3f148b](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/a3f148b511e91c8b8af6893e5e9eab842e03283e))
 
 
 

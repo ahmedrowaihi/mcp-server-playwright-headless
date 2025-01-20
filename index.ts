@@ -159,7 +159,7 @@ const screenshots = new Map<string, string>();
 
 async function ensureBrowser() {
   if (!browser) {
-    browser = await playwright.firefox.launch({ headless: false });
+    browser = await playwright.chromium.launch({ headless: false });
   }
 
   if (!page) {

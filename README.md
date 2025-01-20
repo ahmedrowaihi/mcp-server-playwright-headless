@@ -83,7 +83,7 @@ The installation process will automatically add the following configuration to y
 
 ### Tools
 
-#### `playwright_navigate`
+#### `browser_navigate`
 Navigate to any URL in the browser
 ```javascript
 {
@@ -91,7 +91,7 @@ Navigate to any URL in the browser
 }
 ```
 
-#### `playwright_screenshot`
+#### `browser_screenshot`
 Capture screenshots of the entire page or specific elements
 ```javascript
 {
@@ -101,7 +101,7 @@ Capture screenshots of the entire page or specific elements
 }
 ```
 
-#### `playwright_click`
+#### `browser_click`
 Click elements on the page using CSS selector
 ```javascript
 {
@@ -109,7 +109,7 @@ Click elements on the page using CSS selector
 }
 ```
 
-#### `playwright_click_text`
+#### `browser_click_text`
 Click elements on the page by their text content
 ```javascript
 {
@@ -117,7 +117,7 @@ Click elements on the page by their text content
 }
 ```
 
-#### `playwright_hover`
+#### `browser_hover`
 Hover over elements on the page using CSS selector
 ```javascript
 {
@@ -125,7 +125,7 @@ Hover over elements on the page using CSS selector
 }
 ```
 
-#### `playwright_hover_text`
+#### `browser_hover_text`
 Hover over elements on the page by their text content
 ```javascript
 {
@@ -133,7 +133,7 @@ Hover over elements on the page by their text content
 }
 ```
 
-#### `playwright_fill`
+#### `browser_fill`
 Fill out input fields
 ```javascript
 {
@@ -142,7 +142,7 @@ Fill out input fields
 }
 ```
 
-#### `playwright_select`
+#### `browser_select`
 Select an option in a SELECT element using CSS selector
 ```javascript
 {
@@ -151,7 +151,7 @@ Select an option in a SELECT element using CSS selector
 }
 ```
 
-#### `playwright_select_text`
+#### `browser_select_text`
 Select an option in a SELECT element by its text content
 ```javascript
 {
@@ -160,7 +160,7 @@ Select an option in a SELECT element by its text content
 }
 ```
 
-#### `playwright_evaluate`
+#### `browser_evaluate`
 Execute JavaScript in the browser console
 ```javascript
 {

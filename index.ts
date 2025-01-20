@@ -19,10 +19,23 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import playwright, { Browser, Page } from "playwright";
 
+enum ToolName {
+  BrowserNavigate = "browser_navigate",
+  BrowserScreenshot = "browser_screenshot",
+  BrowserClick = "browser_click",
+  BrowserClickText = "browser_click_text",
+  BrowserFill = "browser_fill",
+  BrowserSelect = "browser_select",
+  BrowserSelectText = "browser_select_text",
+  BrowserHover = "browser_hover",
+  BrowserHoverText = "browser_hover_text",
+  BrowserEvaluate = "browser_evaluate"
+}
+
 // Define the tools once to avoid repetition
 const TOOLS: Tool[] = [
   {
-    name: "playwright_navigate",
+    name: ToolName.BrowserNavigate,
     description: "Navigate to a URL",
     inputSchema: {
       type: "object",
@@ -33,7 +46,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    name: "playwright_screenshot",
+    name: ToolName.BrowserScreenshot,
     description: "Take a screenshot of the current page or a specific element",
     inputSchema: {
       type: "object",
@@ -46,7 +59,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    name: "playwright_click",
+    name: ToolName.BrowserClick,
     description: "Click an element on the page using CSS selector",
     inputSchema: {
       type: "object",
@@ -57,7 +70,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    name: "playwright_click_text",
+    name: ToolName.BrowserClickText,
     description: "Click an element on the page by its text content",
     inputSchema: {
       type: "object",
@@ -68,7 +81,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    name: "playwright_fill",
+    name: ToolName.BrowserFill,
     description: "Fill out an input field",
     inputSchema: {
       type: "object",
@@ -80,7 +93,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    name: "playwright_select",
+    name: ToolName.BrowserSelect,
     description: "Select an element on the page with Select tag using CSS selector",
     inputSchema: {
       type: "object",
@@ -92,7 +105,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    name: "playwright_select_text",
+    name: ToolName.BrowserSelectText,
     description: "Select an element on the page with Select tag by its text content",
     inputSchema: {
       type: "object",
@@ -104,7 +117,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    name: "playwright_hover",
+    name: ToolName.BrowserHover,
     description: "Hover an element on the page using CSS selector",
     inputSchema: {
       type: "object",
@@ -115,7 +128,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    name: "playwright_hover_text",
+    name: ToolName.BrowserHoverText,
     description: "Hover an element on the page by its text content",
     inputSchema: {
       type: "object",
@@ -126,7 +139,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    name: "playwright_evaluate",
+    name: ToolName.BrowserEvaluate,
     description: "Execute JavaScript in the browser console",
     inputSchema: {
       type: "object",
@@ -164,11 +177,11 @@ async function ensureBrowser() {
   return page!;
 }
 
-async function handleToolCall(name: string, args: any): Promise<CallToolResult> {
+async function handleToolCall(name: ToolName, args: any): Promise<CallToolResult> {
   const page = await ensureBrowser();
 
   switch (name) {
-    case "playwright_navigate":
+    case ToolName.BrowserNavigate:
       await page.goto(args.url);
       return {
         content: [{
@@ -178,7 +191,7 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
         isError: false,
       };
 
-    case "playwright_screenshot": {
+    case ToolName.BrowserScreenshot: {
       const fullPage = (args.fullPage === 'true');
 
       const screenshot = await (args.selector ?
@@ -217,7 +230,7 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
       };
     }
 
-    case "playwright_click":
+    case ToolName.BrowserClick:
       try {
         await page.locator(args.selector).click();
         return {
@@ -259,7 +272,7 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
         };
       }
 
-    case "playwright_click_text":
+    case ToolName.BrowserClickText:
       try {
         await page.getByText(args.text).click();
         return {
@@ -300,7 +313,7 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
         };
       }
 
-    case "playwright_fill":
+    case ToolName.BrowserFill:
       try {
         await page.locator(args.selector).pressSequentially(args.value, { delay: 100 });
         return {
@@ -341,7 +354,7 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
         };
       }
 
-    case "playwright_select":
+    case ToolName.BrowserSelect:
       try {
         await page.locator(args.selector).selectOption(args.value);
         return {
@@ -382,7 +395,7 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
         };
       }
 
-    case "playwright_select_text":
+    case ToolName.BrowserSelectText:
       try {
         await page.getByText(args.text).selectOption(args.value);
         return {
@@ -423,7 +436,7 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
         };
       }
 
-    case "playwright_hover":
+    case ToolName.BrowserHover:
       try {
         await page.locator(args.selector).hover();
         return {
@@ -464,7 +477,7 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
         };
       }
 
-    case "playwright_hover_text":
+    case ToolName.BrowserHoverText:
       try {
         await page.getByText(args.text).hover();
         return {
@@ -505,7 +518,7 @@ async function handleToolCall(name: string, args: any): Promise<CallToolResult> 
         };
       }
 
-    case "playwright_evaluate":
+    case ToolName.BrowserEvaluate:
       try {
         const result = await page.evaluate((script) => {
           const logs: string[] = [];
@@ -629,7 +642,7 @@ async function runServer() {
   }));
   
   server.setRequestHandler(CallToolRequestSchema, async (request) =>
-    handleToolCall(request.params.name, request.params.arguments ?? {})
+    handleToolCall(request.params.name as ToolName, request.params.arguments ?? {})
   );
 }
 

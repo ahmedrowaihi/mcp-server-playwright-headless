@@ -1,6 +1,6 @@
 {
   "name": "@automatalabs/mcp-server-playwright",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "MCP server for browser automation using Playwright",
   "license": "MIT",
   "author": "Automata Labs (https://automatalabs.io)",

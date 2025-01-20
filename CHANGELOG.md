@@ -1,3 +1,16 @@
+# [1.1.0](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v1.0.0...v1.1.0) (2025-01-20)
+
+
+### Features
+
+* use chromium as default browser ([192d18c](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/192d18c327db6a06481445373ca270de02eb2de6))
+
+
+
+# [1.0.0](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.9.0...v1.0.0) (2025-01-20)
+
+
+
 # [0.9.0](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.8.0...v0.9.0) (2024-12-11)
 
 
@@ -22,24 +35,6 @@
 ### Bug Fixes
 
 * **handleToolCall:** make handleToolCall functions that interact with elements retry in the case that strict mode violations are encountered ([579744b](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/579744b8c7c6034cd8334f32f22e5053cc0232e7))
-
-
-
-## [0.7.1](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.7.0...v0.7.1) (2024-12-04)
-
-
-### Bug Fixes
-
-* update ensureBrowser function to be more resilient in case browser/page is closed during chat ([1886924](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/1886924a42d789e9fa1e6257a1143034a8047de1))
-
-
-
-# [0.7.0](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.6.5...v0.7.0) (2024-12-04)
-
-
-### Features
-
-* **server:** make tool call result spec compatible ([13141ba](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/13141ba44246e670bdc0214fe76b879f3683eebb))
 
 
 

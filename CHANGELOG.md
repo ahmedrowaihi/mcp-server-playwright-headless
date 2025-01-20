@@ -1,3 +1,12 @@
+# [1.2.0](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v1.1.0...v1.2.0) (2025-01-20)
+
+
+### Features
+
+* add xvfb support for linux ([b7edd79](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/b7edd79ce57c922241d2cc4c8ff4fded5fe4224f))
+
+
+
 # [1.1.0](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v1.0.0...v1.1.0) (2025-01-20)
 
 
@@ -26,15 +35,6 @@
 ### Features
 
 * **playwright:** add text-based interaction tools ([75ab511](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/75ab511ce31f66acc2734f8fcf65c3a06b9802ea))
-
-
-
-## [0.7.2](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.7.1...v0.7.2) (2024-12-04)
-
-
-### Bug Fixes
-
-* **handleToolCall:** make handleToolCall functions that interact with elements retry in the case that strict mode violations are encountered ([579744b](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/579744b8c7c6034cd8334f32f22e5053cc0232e7))
 
 
 

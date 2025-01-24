@@ -1,3 +1,13 @@
+## [1.2.1](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v1.2.0...v1.2.1) (2025-01-24)
+
+
+### Bug Fixes
+
+* Revert "feat: add xvfb support for linux" ([b910dba](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/b910dbab5de055611e91cceae46ae68b61d177db))
+* Revert "feat: use chromium as default browser" ([56934ed](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/56934edaf4a595e0a893457030e735b7ab0d1fc0))
+
+
+
 # [1.2.0](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v1.1.0...v1.2.0) (2025-01-20)
 
 
@@ -26,15 +36,6 @@
 ### Features
 
 * add Claude config file handling for Windows and macOS ([65b3ac3](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/65b3ac3ee5f5cc2d5600e1cec920db4b15e6287f))
-
-
-
-# [0.8.0](https://github.com/Automata-Labs-team/MCP-Server-Playwright/compare/v0.7.2...v0.8.0) (2024-12-04)
-
-
-### Features
-
-* **playwright:** add text-based interaction tools ([75ab511](https://github.com/Automata-Labs-team/MCP-Server-Playwright/commit/75ab511ce31f66acc2734f8fcf65c3a06b9802ea))
 
 
 

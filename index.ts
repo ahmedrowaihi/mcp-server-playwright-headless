@@ -18,15 +18,6 @@ import {
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import playwright, { Browser, Page } from "playwright";
-import { Xvfb } from 'xvfb-ts';
-const xvfb = new Xvfb();
-
-try {
-    await xvfb.start();
-} catch(error: any) {
-    console.warn("Failed to start Xvfb.")
-}
-
 
 enum ToolName {
   BrowserNavigate = "browser_navigate",
@@ -168,7 +159,7 @@ const screenshots = new Map<string, string>();
 
 async function ensureBrowser() {
   if (!browser) {
-    browser = await playwright.firefox.launch({ headless: false });
+    browser = await playwright.chromium.launch({ headless: false });
   }
 
   if (!page) {
@@ -759,10 +750,9 @@ async function checkPlatformAndInstall() {
       .parse();
 
     // If we get here, no command was specified, so run the server
-    await runServer();
+    await runServer().catch(console.error);
   } catch (error) {
     console.error('Error:', error);
-    await xvfb.stop().catch(console.error);
     process.exit(1);
   }
 })();

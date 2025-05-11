@@ -18,6 +18,7 @@ import {
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import playwright, { Browser, Page } from "playwright";
+import { ImgurClient } from "imgur";
 
 enum ToolName {
   BrowserNavigate = "browser_navigate",
@@ -187,6 +188,32 @@ let page: Page | undefined;
 const consoleLogs: string[] = [];
 const screenshots = new Map<string, string>();
 
+// Add Imgur API configuration
+const IMGUR_CLIENT_ID = process.env.IMGUR_CLIENT_ID;
+let imgurClient: ImgurClient | null = null;
+
+if (IMGUR_CLIENT_ID) {
+  imgurClient = new ImgurClient({ clientId: IMGUR_CLIENT_ID });
+}
+
+// Add function to upload image to Imgur
+async function uploadToImgur(imageBuffer: Buffer): Promise<string | null> {
+  if (!imgurClient) {
+    return null;
+  }
+
+  try {
+    const response = await imgurClient.upload({
+      image: imageBuffer.toString("base64"),
+      type: "base64",
+    });
+    return response.data.link;
+  } catch (error) {
+    console.error("Error uploading to Imgur:", error);
+    return null;
+  }
+}
+
 async function ensureBrowser() {
   if (!browser) {
     browser = await playwright.firefox.launch({ headless: true });
@@ -232,9 +259,8 @@ async function handleToolCall(
       const screenshot = await (args.selector
         ? page.locator(args.selector).screenshot()
         : page.screenshot({ fullPage }));
-      const base64Screenshot = screenshot.toString("base64");
 
-      if (!base64Screenshot) {
+      if (!screenshot) {
         return {
           content: [
             {
@@ -248,6 +274,9 @@ async function handleToolCall(
         };
       }
 
+      const base64Screenshot = screenshot.toString("base64");
+      const imageUrl = await uploadToImgur(screenshot);
+
       screenshots.set(args.name, base64Screenshot);
       server.notification({
         method: "notifications/resources/list_changed",
@@ -257,7 +286,9 @@ async function handleToolCall(
         content: [
           {
             type: "text",
-            text: `Screenshot '${args.name}' taken`,
+            text: imageUrl
+              ? `Screenshot uploaded to: ${imageUrl}`
+              : "Screenshot taken",
           } as TextContent,
           {
             type: "image",

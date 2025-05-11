@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import yargs from "yargs/yargs";
-import { hideBin } from 'yargs/helpers'
+import { hideBin } from "yargs/helpers";
 import os from "os";
 import path from "path";
 import { promises as fs } from "fs";
@@ -29,7 +29,7 @@ enum ToolName {
   BrowserSelectText = "browser_select_text",
   BrowserHover = "browser_hover",
   BrowserHoverText = "browser_hover_text",
-  BrowserEvaluate = "browser_evaluate"
+  BrowserEvaluate = "browser_evaluate",
 }
 
 // Define the tools once to avoid repetition
@@ -52,8 +52,15 @@ const TOOLS: Tool[] = [
       type: "object",
       properties: {
         name: { type: "string", description: "Name for the screenshot" },
-        selector: { type: "string", description: "CSS selector for element to screenshot" },
-        fullPage: { type: "boolean", description: "Take a full page screenshot (default: false)", default: false },
+        selector: {
+          type: "string",
+          description: "CSS selector for element to screenshot",
+        },
+        fullPage: {
+          type: "boolean",
+          description: "Take a full page screenshot (default: false)",
+          default: false,
+        },
       },
       required: ["name"],
     },
@@ -64,7 +71,10 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        selector: { type: "string", description: "CSS selector for element to click" },
+        selector: {
+          type: "string",
+          description: "CSS selector for element to click",
+        },
       },
       required: ["selector"],
     },
@@ -75,7 +85,10 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        text: { type: "string", description: "Text content of the element to click" },
+        text: {
+          type: "string",
+          description: "Text content of the element to click",
+        },
       },
       required: ["text"],
     },
@@ -86,7 +99,10 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        selector: { type: "string", description: "CSS selector for input field" },
+        selector: {
+          type: "string",
+          description: "CSS selector for input field",
+        },
         value: { type: "string", description: "Value to fill" },
       },
       required: ["selector", "value"],
@@ -94,11 +110,15 @@ const TOOLS: Tool[] = [
   },
   {
     name: ToolName.BrowserSelect,
-    description: "Select an element on the page with Select tag using CSS selector",
+    description:
+      "Select an element on the page with Select tag using CSS selector",
     inputSchema: {
       type: "object",
       properties: {
-        selector: { type: "string", description: "CSS selector for element to select" },
+        selector: {
+          type: "string",
+          description: "CSS selector for element to select",
+        },
         value: { type: "string", description: "Value to select" },
       },
       required: ["selector", "value"],
@@ -106,11 +126,15 @@ const TOOLS: Tool[] = [
   },
   {
     name: ToolName.BrowserSelectText,
-    description: "Select an element on the page with Select tag by its text content",
+    description:
+      "Select an element on the page with Select tag by its text content",
     inputSchema: {
       type: "object",
       properties: {
-        text: { type: "string", description: "Text content of the element to select" },
+        text: {
+          type: "string",
+          description: "Text content of the element to select",
+        },
         value: { type: "string", description: "Value to select" },
       },
       required: ["text", "value"],
@@ -122,7 +146,10 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        selector: { type: "string", description: "CSS selector for element to hover" },
+        selector: {
+          type: "string",
+          description: "CSS selector for element to hover",
+        },
       },
       required: ["selector"],
     },
@@ -133,7 +160,10 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        text: { type: "string", description: "Text content of the element to hover" },
+        text: {
+          type: "string",
+          description: "Text content of the element to hover",
+        },
       },
       required: ["text"],
     },
@@ -159,7 +189,7 @@ const screenshots = new Map<string, string>();
 
 async function ensureBrowser() {
   if (!browser) {
-    browser = await playwright.firefox.launch({ headless: false });
+    browser = await playwright.firefox.launch({ headless: true });
   }
 
   if (!page) {
@@ -174,37 +204,46 @@ async function ensureBrowser() {
       params: { uri: "console://logs" },
     });
   });
-  return page!;
+  return page;
 }
 
-async function handleToolCall(name: ToolName, args: any): Promise<CallToolResult> {
+async function handleToolCall(
+  name: ToolName,
+  args: any
+): Promise<CallToolResult> {
   const page = await ensureBrowser();
 
   switch (name) {
     case ToolName.BrowserNavigate:
       await page.goto(args.url);
       return {
-        content: [{
-          type: "text",
+        content: [
+          {
+            type: "text",
             text: `Navigated to ${args.url}`,
-          }],
+          },
+        ],
         isError: false,
       };
 
     case ToolName.BrowserScreenshot: {
-      const fullPage = (args.fullPage === 'true');
+      const fullPage = args.fullPage === "true";
 
-      const screenshot = await (args.selector ?
-        page.locator(args.selector).screenshot() :
-        page.screenshot({ fullPage }));
-      const base64Screenshot = screenshot.toString('base64');
+      const screenshot = await (args.selector
+        ? page.locator(args.selector).screenshot()
+        : page.screenshot({ fullPage }));
+      const base64Screenshot = screenshot.toString("base64");
 
       if (!base64Screenshot) {
         return {
-          content: [{
-            type: "text",
-            text: args.selector ? `Element not found: ${args.selector}` : "Screenshot failed",
-          }],
+          content: [
+            {
+              type: "text",
+              text: args.selector
+                ? `Element not found: ${args.selector}`
+                : "Screenshot failed",
+            },
+          ],
           isError: true,
         };
       }
@@ -222,10 +261,10 @@ async function handleToolCall(name: ToolName, args: any): Promise<CallToolResult
           } as TextContent,
           {
             type: "image",
-              data: base64Screenshot,
-              mimeType: "image/png",
-            } as ImageContent,
-          ],
+            data: base64Screenshot,
+            mimeType: "image/png",
+          } as ImageContent,
+        ],
         isError: false,
       };
     }
@@ -234,40 +273,52 @@ async function handleToolCall(name: ToolName, args: any): Promise<CallToolResult
       try {
         await page.locator(args.selector).click();
         return {
-          content: [{
-            type: "text",
-            text: `Clicked: ${args.selector}`,
-          }],
+          content: [
+            {
+              type: "text",
+              text: `Clicked: ${args.selector}`,
+            },
+          ],
           isError: false,
         };
       } catch (error) {
-        if((error as Error).message.includes("strict mode violation")) {
-            console.log("Strict mode violation, retrying on first element...");
-            try {
-                await page.locator(args.selector).first().click();
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Clicked: ${args.selector}`,
-                    }],
-                    isError: false,
-                };
-            } catch (error) {
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Failed (twice) to click ${args.selector}: ${(error as Error).message}`,
-                    }],
-                    isError: true,
-                };
-            }
+        if ((error as Error).message.includes("strict mode violation")) {
+          console.log("Strict mode violation, retrying on first element...");
+          try {
+            await page.locator(args.selector).first().click();
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Clicked: ${args.selector}`,
+                },
+              ],
+              isError: false,
+            };
+          } catch (error) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Failed (twice) to click ${args.selector}: ${
+                    (error as Error).message
+                  }`,
+                },
+              ],
+              isError: true,
+            };
+          }
         }
-        
+
         return {
-          content: [{
-            type: "text",
-            text: `Failed to click ${args.selector}: ${(error as Error).message}`,
-          }],
+          content: [
+            {
+              type: "text",
+              text: `Failed to click ${args.selector}: ${
+                (error as Error).message
+              }`,
+            },
+          ],
           isError: true,
         };
       }
@@ -276,80 +327,109 @@ async function handleToolCall(name: ToolName, args: any): Promise<CallToolResult
       try {
         await page.getByText(args.text).click();
         return {
-          content: [{
-            type: "text",
-            text: `Clicked element with text: ${args.text}`,
-          }],
+          content: [
+            {
+              type: "text",
+              text: `Clicked element with text: ${args.text}`,
+            },
+          ],
           isError: false,
         };
       } catch (error) {
-        if((error as Error).message.includes("strict mode violation")) {
-            console.log("Strict mode violation, retrying on first element...");
-            try {
-                await page.getByText(args.text).first().click();
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Clicked element with text: ${args.text}`,
-                    }],
-                    isError: false,
-                };
-            } catch (error) {
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Failed (twice) to click element with text ${args.text}: ${(error as Error).message}`,
-                    }],
-                    isError: true,
-                };
-            }
+        if ((error as Error).message.includes("strict mode violation")) {
+          console.log("Strict mode violation, retrying on first element...");
+          try {
+            await page.getByText(args.text).first().click();
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Clicked element with text: ${args.text}`,
+                },
+              ],
+              isError: false,
+            };
+          } catch (error) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Failed (twice) to click element with text ${
+                    args.text
+                  }: ${(error as Error).message}`,
+                },
+              ],
+              isError: true,
+            };
+          }
         }
         return {
-          content: [{
-            type: "text",
-            text: `Failed to click element with text ${args.text}: ${(error as Error).message}`,
-          }],
+          content: [
+            {
+              type: "text",
+              text: `Failed to click element with text ${args.text}: ${
+                (error as Error).message
+              }`,
+            },
+          ],
           isError: true,
         };
       }
 
     case ToolName.BrowserFill:
       try {
-        await page.locator(args.selector).pressSequentially(args.value, { delay: 100 });
+        await page
+          .locator(args.selector)
+          .pressSequentially(args.value, { delay: 100 });
         return {
-          content: [{
-            type: "text",
+          content: [
+            {
+              type: "text",
               text: `Filled ${args.selector} with: ${args.value}`,
-            }],
+            },
+          ],
           isError: false,
         };
       } catch (error) {
-        if((error as Error).message.includes("strict mode violation")) {
-            console.log("Strict mode violation, retrying on first element...");
-            try {
-                await page.locator(args.selector).first().pressSequentially(args.value, { delay: 100 });
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Filled ${args.selector} with: ${args.value}`,
-                    }],
-                    isError: false,
-                };
-            } catch (error) {
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Failed (twice) to fill ${args.selector}: ${(error as Error).message}`,
-                    }],
-                    isError: true,
-                };
-            }
+        if ((error as Error).message.includes("strict mode violation")) {
+          console.log("Strict mode violation, retrying on first element...");
+          try {
+            await page
+              .locator(args.selector)
+              .first()
+              .pressSequentially(args.value, { delay: 100 });
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Filled ${args.selector} with: ${args.value}`,
+                },
+              ],
+              isError: false,
+            };
+          } catch (error) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Failed (twice) to fill ${args.selector}: ${
+                    (error as Error).message
+                  }`,
+                },
+              ],
+              isError: true,
+            };
+          }
         }
         return {
-          content: [{
-            type: "text",
-              text: `Failed to fill ${args.selector}: ${(error as Error).message}`,
-            }],
+          content: [
+            {
+              type: "text",
+              text: `Failed to fill ${args.selector}: ${
+                (error as Error).message
+              }`,
+            },
+          ],
           isError: true,
         };
       }
@@ -358,39 +438,51 @@ async function handleToolCall(name: ToolName, args: any): Promise<CallToolResult
       try {
         await page.locator(args.selector).selectOption(args.value);
         return {
-          content: [{
-            type: "text",
+          content: [
+            {
+              type: "text",
               text: `Selected ${args.selector} with: ${args.value}`,
-            }],
+            },
+          ],
           isError: false,
         };
       } catch (error) {
-        if((error as Error).message.includes("strict mode violation")) {
-            console.log("Strict mode violation, retrying on first element...");
-            try {
-                await page.locator(args.selector).first().selectOption(args.value);
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Selected ${args.selector} with: ${args.value}`,
-                    }],
-                    isError: false,
-                };
-            } catch (error) {
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Failed (twice) to select ${args.selector}: ${(error as Error).message}`,
-                    }],
-                    isError: true,
-                };
-            }
+        if ((error as Error).message.includes("strict mode violation")) {
+          console.log("Strict mode violation, retrying on first element...");
+          try {
+            await page.locator(args.selector).first().selectOption(args.value);
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Selected ${args.selector} with: ${args.value}`,
+                },
+              ],
+              isError: false,
+            };
+          } catch (error) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Failed (twice) to select ${args.selector}: ${
+                    (error as Error).message
+                  }`,
+                },
+              ],
+              isError: true,
+            };
+          }
         }
         return {
-          content: [{
-            type: "text",
-              text: `Failed to select ${args.selector}: ${(error as Error).message}`,
-            }],
+          content: [
+            {
+              type: "text",
+              text: `Failed to select ${args.selector}: ${
+                (error as Error).message
+              }`,
+            },
+          ],
           isError: true,
         };
       }
@@ -399,39 +491,51 @@ async function handleToolCall(name: ToolName, args: any): Promise<CallToolResult
       try {
         await page.getByText(args.text).selectOption(args.value);
         return {
-          content: [{
-            type: "text",
-            text: `Selected element with text ${args.text} with value: ${args.value}`,
-          }],
+          content: [
+            {
+              type: "text",
+              text: `Selected element with text ${args.text} with value: ${args.value}`,
+            },
+          ],
           isError: false,
         };
       } catch (error) {
-        if((error as Error).message.includes("strict mode violation")) {
-            console.log("Strict mode violation, retrying on first element...");
-            try {
-                await page.getByText(args.text).first().selectOption(args.value);
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Selected element with text ${args.text} with value: ${args.value}`,
-                    }],
-                    isError: false,
-                };
-            } catch (error) {
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Failed (twice) to select element with text ${args.text}: ${(error as Error).message}`,
-                    }],
-                    isError: true,
-                };
-            }
+        if ((error as Error).message.includes("strict mode violation")) {
+          console.log("Strict mode violation, retrying on first element...");
+          try {
+            await page.getByText(args.text).first().selectOption(args.value);
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Selected element with text ${args.text} with value: ${args.value}`,
+                },
+              ],
+              isError: false,
+            };
+          } catch (error) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Failed (twice) to select element with text ${
+                    args.text
+                  }: ${(error as Error).message}`,
+                },
+              ],
+              isError: true,
+            };
+          }
         }
         return {
-          content: [{
-            type: "text",
-            text: `Failed to select element with text ${args.text}: ${(error as Error).message}`,
-          }],
+          content: [
+            {
+              type: "text",
+              text: `Failed to select element with text ${args.text}: ${
+                (error as Error).message
+              }`,
+            },
+          ],
           isError: true,
         };
       }
@@ -440,39 +544,51 @@ async function handleToolCall(name: ToolName, args: any): Promise<CallToolResult
       try {
         await page.locator(args.selector).hover();
         return {
-          content: [{
-            type: "text",
+          content: [
+            {
+              type: "text",
               text: `Hovered ${args.selector}`,
-            }],
+            },
+          ],
           isError: false,
         };
       } catch (error) {
-        if((error as Error).message.includes("strict mode violation")) {
-            console.log("Strict mode violation, retrying on first element...");
-            try {
-                await page.locator(args.selector).first().hover();
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Hovered ${args.selector}`,
-                    }],
-                    isError: false,
-                };
-            } catch (error) {
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Failed to hover ${args.selector}: ${(error as Error).message}`,
-                    }],
-                    isError: true,
-                };
-            }
+        if ((error as Error).message.includes("strict mode violation")) {
+          console.log("Strict mode violation, retrying on first element...");
+          try {
+            await page.locator(args.selector).first().hover();
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Hovered ${args.selector}`,
+                },
+              ],
+              isError: false,
+            };
+          } catch (error) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Failed to hover ${args.selector}: ${
+                    (error as Error).message
+                  }`,
+                },
+              ],
+              isError: true,
+            };
+          }
         }
         return {
-          content: [{
-            type: "text",
-              text: `Failed to hover ${args.selector}: ${(error as Error).message}`,
-            }],
+          content: [
+            {
+              type: "text",
+              text: `Failed to hover ${args.selector}: ${
+                (error as Error).message
+              }`,
+            },
+          ],
           isError: true,
         };
       }
@@ -481,39 +597,51 @@ async function handleToolCall(name: ToolName, args: any): Promise<CallToolResult
       try {
         await page.getByText(args.text).hover();
         return {
-          content: [{
-            type: "text",
-            text: `Hovered element with text: ${args.text}`,
-          }],
+          content: [
+            {
+              type: "text",
+              text: `Hovered element with text: ${args.text}`,
+            },
+          ],
           isError: false,
         };
       } catch (error) {
-        if((error as Error).message.includes("strict mode violation")) {
-            console.log("Strict mode violation, retrying on first element...");
-            try {
-                await page.getByText(args.text).first().hover();
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Hovered element with text: ${args.text}`,
-                    }],
-                    isError: false,
-                };
-            } catch (error) {
-                return {
-                    content: [{
-                        type: "text",
-                        text: `Failed (twice) to hover element with text ${args.text}: ${(error as Error).message}`,
-                    }],
-                    isError: true,
-                };
-            }
+        if ((error as Error).message.includes("strict mode violation")) {
+          console.log("Strict mode violation, retrying on first element...");
+          try {
+            await page.getByText(args.text).first().hover();
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Hovered element with text: ${args.text}`,
+                },
+              ],
+              isError: false,
+            };
+          } catch (error) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Failed (twice) to hover element with text ${
+                    args.text
+                  }: ${(error as Error).message}`,
+                },
+              ],
+              isError: true,
+            };
+          }
         }
         return {
-          content: [{
-            type: "text",
-            text: `Failed to hover element with text ${args.text}: ${(error as Error).message}`,
-          }],
+          content: [
+            {
+              type: "text",
+              text: `Failed to hover element with text ${args.text}: ${
+                (error as Error).message
+              }`,
+            },
+          ],
           isError: true,
         };
       }
@@ -524,9 +652,9 @@ async function handleToolCall(name: ToolName, args: any): Promise<CallToolResult
           const logs: string[] = [];
           const originalConsole = { ...console };
 
-          ['log', 'info', 'warn', 'error'].forEach(method => {
+          ["log", "info", "warn", "error"].forEach((method) => {
             (console as any)[method] = (...args: any[]) => {
-              logs.push(`[${method}] ${args.join(' ')}`);
+              logs.push(`[${method}] ${args.join(" ")}`);
               (originalConsole as any)[method](...args);
             };
           });
@@ -544,28 +672,36 @@ async function handleToolCall(name: ToolName, args: any): Promise<CallToolResult
         return {
           content: [
             {
-                type: "text",
-                text: `Execution result:\n${JSON.stringify(result.result, null, 2)}\n\nConsole output:\n${result.logs.join('\n')}`,
-              },
-            ],
+              type: "text",
+              text: `Execution result:\n${JSON.stringify(
+                result.result,
+                null,
+                2
+              )}\n\nConsole output:\n${result.logs.join("\n")}`,
+            },
+          ],
           isError: false,
         };
       } catch (error) {
         return {
-          content: [{
-            type: "text",
+          content: [
+            {
+              type: "text",
               text: `Script execution failed: ${(error as Error).message}`,
-            }],
+            },
+          ],
           isError: true,
         };
       }
 
     default:
       return {
-        content: [{
-          type: "text",
+        content: [
+          {
+            type: "text",
             text: `Unknown tool: ${name}`,
-          }],
+          },
+        ],
         isError: true,
       };
   }
@@ -581,9 +717,8 @@ const server = new Server(
       resources: {},
       tools: {},
     },
-  },
+  }
 );
-
 
 // Setup request handlers
 server.setRequestHandler(ListResourcesRequestSchema, async () => ({
@@ -593,7 +728,7 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => ({
       mimeType: "text/plain",
       name: "Browser console logs",
     },
-    ...Array.from(screenshots.keys()).map(name => ({
+    ...Array.from(screenshots.keys()).map((name) => ({
       uri: `screenshot://${name}`,
       mimeType: "image/png",
       name: `Screenshot: ${name}`,
@@ -606,11 +741,13 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
 
   if (uri === "console://logs") {
     return {
-      contents: [{
-        uri,
-        mimeType: "text/plain",
-        text: consoleLogs.join("\n"),
-      }],
+      contents: [
+        {
+          uri,
+          mimeType: "text/plain",
+          text: consoleLogs.join("\n"),
+        },
+      ],
     };
   }
 
@@ -619,19 +756,19 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     const screenshot = screenshots.get(name);
     if (screenshot) {
       return {
-        contents: [{
-          uri,
-          mimeType: "image/png",
-          blob: screenshot,
-        }],
+        contents: [
+          {
+            uri,
+            mimeType: "image/png",
+            blob: screenshot,
+          },
+        ],
       };
     }
   }
 
   throw new Error(`Resource not found: ${uri}`);
 });
-
-
 
 async function runServer() {
   const transport = new StdioServerTransport();
@@ -640,9 +777,12 @@ async function runServer() {
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: TOOLS,
   }));
-  
+
   server.setRequestHandler(CallToolRequestSchema, async (request) =>
-    handleToolCall(request.params.name as ToolName, request.params.arguments ?? {})
+    handleToolCall(
+      request.params.name as ToolName,
+      request.params.arguments ?? {}
+    )
   );
 }
 
@@ -651,18 +791,28 @@ async function checkPlatformAndInstall() {
   if (platform === "win32") {
     console.log("Installing MCP Playwright Server for Windows...");
     try {
-      const configFilePath = path.join(os.homedir(), 'AppData', 'Roaming', 'Claude', 'claude_desktop_config.json');
-      
+      const configFilePath = path.join(
+        os.homedir(),
+        "AppData",
+        "Roaming",
+        "Claude",
+        "claude_desktop_config.json"
+      );
+
       let config: any;
       try {
         // Try to read existing config file
-        const fileContent = await fs.readFile(configFilePath, 'utf-8');
+        const fileContent = await fs.readFile(configFilePath, "utf-8");
         config = JSON.parse(fileContent);
       } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
           // Create new config file with mcpServers object
           config = { mcpServers: {} };
-          await fs.writeFile(configFilePath, JSON.stringify(config, null, 2), 'utf-8');
+          await fs.writeFile(
+            configFilePath,
+            JSON.stringify(config, null, 2),
+            "utf-8"
+          );
           console.log("Created new Claude config file");
         } else {
           console.error("Error reading Claude config file:", error);
@@ -678,13 +828,16 @@ async function checkPlatformAndInstall() {
       // Update the playwright configuration
       config.mcpServers.playwright = {
         command: "npx",
-        args: ["-y", "@automatalabs/mcp-server-playwright"]
+        args: ["-y", "@automatalabs/mcp-server-playwright"],
       };
 
       // Write the updated config back to file
-      await fs.writeFile(configFilePath, JSON.stringify(config, null, 2), 'utf-8');
+      await fs.writeFile(
+        configFilePath,
+        JSON.stringify(config, null, 2),
+        "utf-8"
+      );
       console.log("✓ Successfully updated Claude configuration");
-      
     } catch (error) {
       console.error("Error during installation:", error);
       process.exit(1);
@@ -692,18 +845,28 @@ async function checkPlatformAndInstall() {
   } else if (platform === "darwin") {
     console.log("Installing MCP Playwright Server for macOS...");
     try {
-      const configFilePath = path.join(os.homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json');
-      
+      const configFilePath = path.join(
+        os.homedir(),
+        "Library",
+        "Application Support",
+        "Claude",
+        "claude_desktop_config.json"
+      );
+
       let config: any;
       try {
         // Try to read existing config file
-        const fileContent = await fs.readFile(configFilePath, 'utf-8');
+        const fileContent = await fs.readFile(configFilePath, "utf-8");
         config = JSON.parse(fileContent);
       } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
           // Create new config file with mcpServers object
           config = { mcpServers: {} };
-          await fs.writeFile(configFilePath, JSON.stringify(config, null, 2), 'utf-8');
+          await fs.writeFile(
+            configFilePath,
+            JSON.stringify(config, null, 2),
+            "utf-8"
+          );
           console.log("Created new Claude config file");
         } else {
           console.error("Error reading Claude config file:", error);
@@ -719,13 +882,16 @@ async function checkPlatformAndInstall() {
       // Update the playwright configuration
       config.mcpServers.playwright = {
         command: "npx",
-        args: ["-y", "@automatalabs/mcp-server-playwright"]
+        args: ["-y", "@automatalabs/mcp-server-playwright"],
       };
 
       // Write the updated config back to file
-      await fs.writeFile(configFilePath, JSON.stringify(config, null, 2), 'utf-8');
+      await fs.writeFile(
+        configFilePath,
+        JSON.stringify(config, null, 2),
+        "utf-8"
+      );
       console.log("✓ Successfully updated Claude configuration");
-      
     } catch (error) {
       console.error("Error during installation:", error);
       process.exit(1);
@@ -740,11 +906,16 @@ async function checkPlatformAndInstall() {
   try {
     // Parse args but continue with server if no command specified
     await yargs(hideBin(process.argv))
-      .command('install', 'Install MCP-Server-Playwright dependencies', () => {}, async () => {
-        await checkPlatformAndInstall();
-        // Exit after successful installation
-        process.exit(0);
-      })
+      .command(
+        "install",
+        "Install MCP-Server-Playwright dependencies",
+        () => {},
+        async () => {
+          await checkPlatformAndInstall();
+          // Exit after successful installation
+          process.exit(0);
+        }
+      )
       .strict()
       .help()
       .parse();
@@ -752,7 +923,7 @@ async function checkPlatformAndInstall() {
     // If we get here, no command was specified, so run the server
     await runServer().catch(console.error);
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
     process.exit(1);
   }
 })();

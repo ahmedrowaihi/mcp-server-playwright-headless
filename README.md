@@ -30,6 +30,7 @@
 
 - 🌐 Full browser automation capabilities
 - 📸 Screenshot capture of entire pages or specific elements
+- ☁️ Optional screenshot upload to Imgur (get a public image URL)
 - 🖱️ Comprehensive web interaction (navigation, clicking, form filling)
 - 📊 Console log monitoring
 - 🔧 JavaScript execution in browser context
@@ -47,19 +48,24 @@ npx -y @smithery/cli install @automatalabs/mcp-server-playwright --client claude
 You can install the package using either npx or mcp-get:
 
 Using npx:
+
 ```bash
 npx @automatalabs/mcp-server-playwright install
 ```
+
 This command will:
+
 1. Check your operating system compatibility (Windows/macOS)
 2. Create or update the Claude configuration file
 3. Configure the Playwright server integration
 
 The configuration file will be automatically created/updated at:
+
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
 Using mcp-get:
+
 ```bash
 npx @michaellatman/mcp-get@latest install @automatalabs/mcp-server-playwright
 ```
@@ -79,12 +85,24 @@ The installation process will automatically add the following configuration to y
 }
 ```
 
+### Enabling Imgur Screenshot Uploads
+
+To enable automatic upload of screenshots to Imgur and receive a public image URL in responses, set the `IMGUR_CLIENT_ID` environment variable:
+
+```bash
+export IMGUR_CLIENT_ID=your_imgur_client_id
+```
+
+If this variable is not set, screenshots will only be returned as base64 data.
+
 ## Components
 
 ### Tools
 
 #### `browser_navigate`
+
 Navigate to any URL in the browser
+
 ```javascript
 {
   "url": "https://stealthbrowser.cloud"
@@ -92,7 +110,9 @@ Navigate to any URL in the browser
 ```
 
 #### `browser_screenshot`
+
 Capture screenshots of the entire page or specific elements
+
 ```javascript
 {
   "name": "screenshot-name",     // required
@@ -101,8 +121,12 @@ Capture screenshots of the entire page or specific elements
 }
 ```
 
+- If `IMGUR_CLIENT_ID` is set, the response will include a public Imgur URL for the screenshot.
+
 #### `browser_click`
+
 Click elements on the page using CSS selector
+
 ```javascript
 {
   "selector": "#button-id"
@@ -110,7 +134,9 @@ Click elements on the page using CSS selector
 ```
 
 #### `browser_click_text`
+
 Click elements on the page by their text content
+
 ```javascript
 {
   "text": "Click me"
@@ -118,7 +144,9 @@ Click elements on the page by their text content
 ```
 
 #### `browser_hover`
+
 Hover over elements on the page using CSS selector
+
 ```javascript
 {
   "selector": "#menu-item"
@@ -126,7 +154,9 @@ Hover over elements on the page using CSS selector
 ```
 
 #### `browser_hover_text`
+
 Hover over elements on the page by their text content
+
 ```javascript
 {
   "text": "Hover me"
@@ -134,7 +164,9 @@ Hover over elements on the page by their text content
 ```
 
 #### `browser_fill`
+
 Fill out input fields
+
 ```javascript
 {
   "selector": "#input-field",
@@ -143,7 +175,9 @@ Fill out input fields
 ```
 
 #### `browser_select`
+
 Select an option in a SELECT element using CSS selector
+
 ```javascript
 {
   "selector": "#dropdown",
@@ -152,7 +186,9 @@ Select an option in a SELECT element using CSS selector
 ```
 
 #### `browser_select_text`
+
 Select an option in a SELECT element by its text content
+
 ```javascript
 {
   "text": "Choose me",
@@ -161,7 +197,9 @@ Select an option in a SELECT element by its text content
 ```
 
 #### `browser_evaluate`
+
 Execute JavaScript in the browser console
+
 ```javascript
 {
   "script": "document.title"
@@ -171,6 +209,7 @@ Execute JavaScript in the browser console
 ### Resources
 
 1. **Console Logs** (`console://logs`)
+
    - Access browser console output in text format
    - Includes all console messages from the browser
 

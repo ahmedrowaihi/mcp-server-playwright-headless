@@ -1,15 +1,15 @@
 {
-  "name": "@automatalabs/mcp-server-playwright",
-  "version": "1.2.1",
-  "description": "MCP server for browser automation using Playwright",
+  "name": "mcp-server-playwright-headless",
+  "version": "1.0.0",
+  "description": "MCP server for browser automation using Playwright with headless mode enabled",
   "license": "MIT",
-  "author": "Automata Labs (https://automatalabs.io)",
-  "homepage": "https://automatalabs.io",
+  "author": "ahmedrowaihi",
+  "homepage": "https://github.com/ahmedrowaihi/mcp-server-playwright-headless",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Automata-Labs-team/MCP-Server-Playwright.git"
+    "url": "git+https://github.com/ahmedrowaihi/mcp-server-playwright-headless.git"
   },
-  "bugs": "https://github.com/Automata-Labs-team/MCP-Server-Playwright/issues",
+  "bugs": "https://github.com/ahmedrowaihi/mcp-server-playwright-headless/issues",
   "type": "module",
   "bin": {
     "mcp-server-playwright": "dist/index.js"

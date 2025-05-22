@@ -30,7 +30,6 @@
 
 - 🌐 Full browser automation capabilities
 - 📸 Screenshot capture of entire pages or specific elements
-- ☁️ Optional screenshot upload to Imgur (get a public image URL)
 - 🖱️ Comprehensive web interaction (navigation, clicking, form filling)
 - 📊 Console log monitoring
 - 🔧 JavaScript execution in browser context
@@ -85,16 +84,6 @@ The installation process will automatically add the following configuration to y
 }
 ```
 
-### Enabling Imgur Screenshot Uploads
-
-To enable automatic upload of screenshots to Imgur and receive a public image URL in responses, set the `IMGUR_CLIENT_ID` environment variable:
-
-```bash
-export IMGUR_CLIENT_ID=your_imgur_client_id
-```
-
-If this variable is not set, screenshots will only be returned as base64 data.
-
 ## Components
 
 ### Tools
@@ -120,8 +109,6 @@ Capture screenshots of the entire page or specific elements
   "fullPage": true              // optional, default: false
 }
 ```
-
-- If `IMGUR_CLIENT_ID` is set, the response will include a public Imgur URL for the screenshot.
 
 #### `browser_click`
 

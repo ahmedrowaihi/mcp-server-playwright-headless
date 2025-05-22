@@ -1,960 +1,423 @@
 #!/usr/bin/env node
 
-import yargs from "yargs/yargs";
-import { hideBin } from "yargs/helpers";
-import os from "os";
-import path from "path";
+import { FastMCP } from "fastmcp";
 import { promises as fs } from "fs";
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListResourcesRequestSchema,
-  ListToolsRequestSchema,
-  ReadResourceRequestSchema,
-  CallToolResult,
-  TextContent,
-  ImageContent,
-  Tool,
-} from "@modelcontextprotocol/sdk/types.js";
+import path from "path";
 import playwright, { Browser, Page } from "playwright";
-import { ImgurClient } from "imgur";
-
-enum ToolName {
-  BrowserNavigate = "browser_navigate",
-  BrowserScreenshot = "browser_screenshot",
-  BrowserClick = "browser_click",
-  BrowserClickText = "browser_click_text",
-  BrowserFill = "browser_fill",
-  BrowserSelect = "browser_select",
-  BrowserSelectText = "browser_select_text",
-  BrowserHover = "browser_hover",
-  BrowserHoverText = "browser_hover_text",
-  BrowserEvaluate = "browser_evaluate",
-}
-
-// Define the tools once to avoid repetition
-const TOOLS: Tool[] = [
-  {
-    name: ToolName.BrowserNavigate,
-    description: "Navigate to a URL",
-    inputSchema: {
-      type: "object",
-      properties: {
-        url: { type: "string" },
-      },
-      required: ["url"],
-    },
-  },
-  {
-    name: ToolName.BrowserScreenshot,
-    description: "Take a screenshot of the current page or a specific element",
-    inputSchema: {
-      type: "object",
-      properties: {
-        name: { type: "string", description: "Name for the screenshot" },
-        selector: {
-          type: "string",
-          description: "CSS selector for element to screenshot",
-        },
-        fullPage: {
-          type: "boolean",
-          description: "Take a full page screenshot (default: false)",
-          default: false,
-        },
-      },
-      required: ["name"],
-    },
-  },
-  {
-    name: ToolName.BrowserClick,
-    description: "Click an element on the page using CSS selector",
-    inputSchema: {
-      type: "object",
-      properties: {
-        selector: {
-          type: "string",
-          description: "CSS selector for element to click",
-        },
-      },
-      required: ["selector"],
-    },
-  },
-  {
-    name: ToolName.BrowserClickText,
-    description: "Click an element on the page by its text content",
-    inputSchema: {
-      type: "object",
-      properties: {
-        text: {
-          type: "string",
-          description: "Text content of the element to click",
-        },
-      },
-      required: ["text"],
-    },
-  },
-  {
-    name: ToolName.BrowserFill,
-    description: "Fill out an input field",
-    inputSchema: {
-      type: "object",
-      properties: {
-        selector: {
-          type: "string",
-          description: "CSS selector for input field",
-        },
-        value: { type: "string", description: "Value to fill" },
-      },
-      required: ["selector", "value"],
-    },
-  },
-  {
-    name: ToolName.BrowserSelect,
-    description:
-      "Select an element on the page with Select tag using CSS selector",
-    inputSchema: {
-      type: "object",
-      properties: {
-        selector: {
-          type: "string",
-          description: "CSS selector for element to select",
-        },
-        value: { type: "string", description: "Value to select" },
-      },
-      required: ["selector", "value"],
-    },
-  },
-  {
-    name: ToolName.BrowserSelectText,
-    description:
-      "Select an element on the page with Select tag by its text content",
-    inputSchema: {
-      type: "object",
-      properties: {
-        text: {
-          type: "string",
-          description: "Text content of the element to select",
-        },
-        value: { type: "string", description: "Value to select" },
-      },
-      required: ["text", "value"],
-    },
-  },
-  {
-    name: ToolName.BrowserHover,
-    description: "Hover an element on the page using CSS selector",
-    inputSchema: {
-      type: "object",
-      properties: {
-        selector: {
-          type: "string",
-          description: "CSS selector for element to hover",
-        },
-      },
-      required: ["selector"],
-    },
-  },
-  {
-    name: ToolName.BrowserHoverText,
-    description: "Hover an element on the page by its text content",
-    inputSchema: {
-      type: "object",
-      properties: {
-        text: {
-          type: "string",
-          description: "Text content of the element to hover",
-        },
-      },
-      required: ["text"],
-    },
-  },
-  {
-    name: ToolName.BrowserEvaluate,
-    description: "Execute JavaScript in the browser console",
-    inputSchema: {
-      type: "object",
-      properties: {
-        script: { type: "string", description: "JavaScript code to execute" },
-      },
-      required: ["script"],
-    },
-  },
-];
+import { z } from "zod";
+import { ScreenshotServer } from "./server.js";
+import { consoleLogs } from "./shared.js";
 
 // Global state
 let browser: Browser | undefined;
 let page: Page | undefined;
-const consoleLogs: string[] = [];
-const screenshots = new Map<string, string>();
 
-// Add Imgur API configuration
-const IMGUR_CLIENT_ID = process.env.IMGUR_CLIENT_ID;
-let imgurClient: ImgurClient | null = null;
+const screenshotServer = ScreenshotServer.getScreenshotServer();
 
-if (IMGUR_CLIENT_ID) {
-  imgurClient = new ImgurClient({ clientId: IMGUR_CLIENT_ID });
-}
-
-// Add function to upload image to Imgur
-async function uploadToImgur(imageBuffer: Buffer): Promise<string | null> {
-  if (!imgurClient) {
-    return null;
-  }
-
-  try {
-    const response = await imgurClient.upload({
-      image: imageBuffer.toString("base64"),
-      type: "base64",
-    });
-    return response.data.link;
-  } catch (error) {
-    console.error("Error uploading to Imgur:", error);
-    return null;
-  }
-}
+// Create FastMCP server
+const server = new FastMCP({
+  name: "playwright-headless",
+  version: "1.0.0",
+  instructions:
+    "A server that provides browser automation capabilities using Playwright in headless mode",
+});
 
 async function ensureBrowser() {
   if (!browser) {
-    browser = await playwright.firefox.launch({ headless: true });
+    browser = await playwright.chromium.launch({ headless: true });
   }
 
-  if (!page) {
+  if (!page && browser) {
     page = await browser.newPage();
   }
 
-  page.on("console", (msg) => {
-    const logEntry = `[${msg.type()}] ${msg.text()}`;
-    consoleLogs.push(logEntry);
-    server.notification({
-      method: "notifications/resources/updated",
-      params: { uri: "console://logs" },
+  if (page) {
+    page.on("console", (msg) => {
+      const logEntry = `[${msg.type()}] ${msg.text()}`;
+      consoleLogs.push(logEntry);
     });
-  });
+  }
   return page;
 }
 
-async function handleToolCall(
-  name: ToolName,
-  args: any
-): Promise<CallToolResult> {
-  const page = await ensureBrowser();
+// Add tools
+server.addTool({
+  name: "browser_navigate",
+  description: "Navigate to a URL",
+  parameters: z.object({
+    url: z.string(),
+  }),
+  execute: async (args) => {
+    const page = await ensureBrowser();
+    if (!page) throw new Error("Failed to initialize browser page");
+    await page.goto(args.url);
+    return `Navigated to ${args.url}`;
+  },
+});
 
-  switch (name) {
-    case ToolName.BrowserNavigate:
-      await page.goto(args.url);
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Navigated to ${args.url}`,
-          },
-        ],
-        isError: false,
-      };
+server.addTool({
+  name: "browser_screenshot",
+  description: "Take a screenshot of the current page or a specific element",
+  parameters: z.object({
+    name: z.string(),
+    selector: z.string().optional(),
+    fullPage: z.boolean().default(false),
+  }),
+  execute: async (args) => {
+    const page = await ensureBrowser();
+    if (!page) throw new Error("Failed to initialize browser page");
+    const screenshot = await (args.selector
+      ? page.locator(args.selector).screenshot()
+      : page.screenshot({ fullPage: args.fullPage, type: "png" }));
 
-    case ToolName.BrowserScreenshot: {
-      const fullPage = args.fullPage === "true";
-
-      const screenshot = await (args.selector
-        ? page.locator(args.selector).screenshot()
-        : page.screenshot({ fullPage }));
-
-      if (!screenshot) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: args.selector
-                ? `Element not found: ${args.selector}`
-                : "Screenshot failed",
-            },
-          ],
-          isError: true,
-        };
-      }
-
-      const base64Screenshot = screenshot.toString("base64");
-      const imageUrl = await uploadToImgur(screenshot);
-
-      screenshots.set(args.name, base64Screenshot);
-      server.notification({
-        method: "notifications/resources/list_changed",
-      });
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: imageUrl
-              ? `Screenshot uploaded to: ${imageUrl}`
-              : "Screenshot taken",
-          } as TextContent,
-          {
-            type: "image",
-            data: base64Screenshot,
-            mimeType: "image/png",
-          } as ImageContent,
-        ],
-        isError: false,
-      };
+    if (!screenshot) {
+      throw new Error(
+        args.selector
+          ? `Element not found: ${args.selector}`
+          : "Screenshot failed"
+      );
     }
 
-    case ToolName.BrowserClick:
-      try {
-        await page.locator(args.selector).click();
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Clicked: ${args.selector}`,
-            },
-          ],
-          isError: false,
-        };
-      } catch (error) {
-        if ((error as Error).message.includes("strict mode violation")) {
-          console.log("Strict mode violation, retrying on first element...");
-          try {
-            await page.locator(args.selector).first().click();
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Clicked: ${args.selector}`,
-                },
-              ],
-              isError: false,
-            };
-          } catch (error) {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Failed (twice) to click ${args.selector}: ${
-                    (error as Error).message
-                  }`,
-                },
-              ],
-              isError: true,
-            };
-          }
-        }
+    // Save screenshot to disk
+    const screenshotName = `${new Date().getTime()}.png`.trim();
+    const screenshotPath = path.join(
+      screenshotServer.getScreenshotsDir(),
+      screenshotName
+    );
+    await fs.writeFile(screenshotPath, screenshot);
 
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to click ${args.selector}: ${
-                (error as Error).message
-              }`,
-            },
-          ],
-          isError: true,
-        };
-      }
-
-    case ToolName.BrowserClickText:
-      try {
-        await page.getByText(args.text).click();
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Clicked element with text: ${args.text}`,
-            },
-          ],
-          isError: false,
-        };
-      } catch (error) {
-        if ((error as Error).message.includes("strict mode violation")) {
-          console.log("Strict mode violation, retrying on first element...");
-          try {
-            await page.getByText(args.text).first().click();
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Clicked element with text: ${args.text}`,
-                },
-              ],
-              isError: false,
-            };
-          } catch (error) {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Failed (twice) to click element with text ${
-                    args.text
-                  }: ${(error as Error).message}`,
-                },
-              ],
-              isError: true,
-            };
-          }
-        }
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to click element with text ${args.text}: ${
-                (error as Error).message
-              }`,
-            },
-          ],
-          isError: true,
-        };
-      }
-
-    case ToolName.BrowserFill:
-      try {
-        await page
-          .locator(args.selector)
-          .pressSequentially(args.value, { delay: 100 });
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Filled ${args.selector} with: ${args.value}`,
-            },
-          ],
-          isError: false,
-        };
-      } catch (error) {
-        if ((error as Error).message.includes("strict mode violation")) {
-          console.log("Strict mode violation, retrying on first element...");
-          try {
-            await page
-              .locator(args.selector)
-              .first()
-              .pressSequentially(args.value, { delay: 100 });
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Filled ${args.selector} with: ${args.value}`,
-                },
-              ],
-              isError: false,
-            };
-          } catch (error) {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Failed (twice) to fill ${args.selector}: ${
-                    (error as Error).message
-                  }`,
-                },
-              ],
-              isError: true,
-            };
-          }
-        }
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to fill ${args.selector}: ${
-                (error as Error).message
-              }`,
-            },
-          ],
-          isError: true,
-        };
-      }
-
-    case ToolName.BrowserSelect:
-      try {
-        await page.locator(args.selector).selectOption(args.value);
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Selected ${args.selector} with: ${args.value}`,
-            },
-          ],
-          isError: false,
-        };
-      } catch (error) {
-        if ((error as Error).message.includes("strict mode violation")) {
-          console.log("Strict mode violation, retrying on first element...");
-          try {
-            await page.locator(args.selector).first().selectOption(args.value);
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Selected ${args.selector} with: ${args.value}`,
-                },
-              ],
-              isError: false,
-            };
-          } catch (error) {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Failed (twice) to select ${args.selector}: ${
-                    (error as Error).message
-                  }`,
-                },
-              ],
-              isError: true,
-            };
-          }
-        }
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to select ${args.selector}: ${
-                (error as Error).message
-              }`,
-            },
-          ],
-          isError: true,
-        };
-      }
-
-    case ToolName.BrowserSelectText:
-      try {
-        await page.getByText(args.text).selectOption(args.value);
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Selected element with text ${args.text} with value: ${args.value}`,
-            },
-          ],
-          isError: false,
-        };
-      } catch (error) {
-        if ((error as Error).message.includes("strict mode violation")) {
-          console.log("Strict mode violation, retrying on first element...");
-          try {
-            await page.getByText(args.text).first().selectOption(args.value);
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Selected element with text ${args.text} with value: ${args.value}`,
-                },
-              ],
-              isError: false,
-            };
-          } catch (error) {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Failed (twice) to select element with text ${
-                    args.text
-                  }: ${(error as Error).message}`,
-                },
-              ],
-              isError: true,
-            };
-          }
-        }
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to select element with text ${args.text}: ${
-                (error as Error).message
-              }`,
-            },
-          ],
-          isError: true,
-        };
-      }
-
-    case ToolName.BrowserHover:
-      try {
-        await page.locator(args.selector).hover();
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Hovered ${args.selector}`,
-            },
-          ],
-          isError: false,
-        };
-      } catch (error) {
-        if ((error as Error).message.includes("strict mode violation")) {
-          console.log("Strict mode violation, retrying on first element...");
-          try {
-            await page.locator(args.selector).first().hover();
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Hovered ${args.selector}`,
-                },
-              ],
-              isError: false,
-            };
-          } catch (error) {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Failed to hover ${args.selector}: ${
-                    (error as Error).message
-                  }`,
-                },
-              ],
-              isError: true,
-            };
-          }
-        }
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to hover ${args.selector}: ${
-                (error as Error).message
-              }`,
-            },
-          ],
-          isError: true,
-        };
-      }
-
-    case ToolName.BrowserHoverText:
-      try {
-        await page.getByText(args.text).hover();
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Hovered element with text: ${args.text}`,
-            },
-          ],
-          isError: false,
-        };
-      } catch (error) {
-        if ((error as Error).message.includes("strict mode violation")) {
-          console.log("Strict mode violation, retrying on first element...");
-          try {
-            await page.getByText(args.text).first().hover();
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Hovered element with text: ${args.text}`,
-                },
-              ],
-              isError: false,
-            };
-          } catch (error) {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Failed (twice) to hover element with text ${
-                    args.text
-                  }: ${(error as Error).message}`,
-                },
-              ],
-              isError: true,
-            };
-          }
-        }
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to hover element with text ${args.text}: ${
-                (error as Error).message
-              }`,
-            },
-          ],
-          isError: true,
-        };
-      }
-
-    case ToolName.BrowserEvaluate:
-      try {
-        const result = await page.evaluate((script) => {
-          const logs: string[] = [];
-          const originalConsole = { ...console };
-
-          ["log", "info", "warn", "error"].forEach((method) => {
-            (console as any)[method] = (...args: any[]) => {
-              logs.push(`[${method}] ${args.join(" ")}`);
-              (originalConsole as any)[method](...args);
-            };
-          });
-
-          try {
-            const result = eval(script);
-            Object.assign(console, originalConsole);
-            return { result, logs };
-          } catch (error) {
-            Object.assign(console, originalConsole);
-            throw error;
-          }
-        }, args.script);
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Execution result:\n${JSON.stringify(
-                result.result,
-                null,
-                2
-              )}\n\nConsole output:\n${result.logs.join("\n")}`,
-            },
-          ],
-          isError: false,
-        };
-      } catch (error) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Script execution failed: ${(error as Error).message}`,
-            },
-          ],
-          isError: true,
-        };
-      }
-
-    default:
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Unknown tool: ${name}`,
-          },
-        ],
-        isError: true,
-      };
-  }
-}
-
-const server = new Server(
-  {
-    name: "automatalabs/playwright",
-    version: "0.1.0",
-  },
-  {
-    capabilities: {
-      resources: {},
-      tools: {},
-    },
-  }
-);
-
-// Setup request handlers
-server.setRequestHandler(ListResourcesRequestSchema, async () => ({
-  resources: [
-    {
-      uri: "console://logs",
-      mimeType: "text/plain",
-      name: "Browser console logs",
-    },
-    ...Array.from(screenshots.keys()).map((name) => ({
-      uri: `screenshot://${name}`,
-      mimeType: "image/png",
-      name: `Screenshot: ${name}`,
-    })),
-  ],
-}));
-
-server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-  const uri = request.params.uri.toString();
-
-  if (uri === "console://logs") {
+    // Return URL to the screenshot
+    const screenshotUrl = screenshotServer.getScreenshotUrl(screenshotName);
     return {
-      contents: [
+      content: [
         {
-          uri,
-          mimeType: "text/plain",
-          text: consoleLogs.join("\n"),
+          type: "text",
+          text: `Screenshot taken and available at: ${screenshotUrl}`,
+        },
+        {
+          type: "text",
+          text: `markdown syntax for image: ![screenshot](${screenshotUrl})`,
+        },
+        {
+          type: "text",
+          text: `use markdown syntax for image when responding to user`,
         },
       ],
     };
-  }
-
-  if (uri.startsWith("screenshot://")) {
-    const name = uri.split("://")[1];
-    const screenshot = screenshots.get(name);
-    if (screenshot) {
-      return {
-        contents: [
-          {
-            uri,
-            mimeType: "image/png",
-            blob: screenshot,
-          },
-        ],
-      };
-    }
-  }
-
-  throw new Error(`Resource not found: ${uri}`);
+  },
 });
 
-async function runServer() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+server.addTool({
+  name: "browser_click",
+  description: "Click an element on the page using CSS selector",
+  parameters: z.object({
+    selector: z.string(),
+  }),
+  execute: async (args) => {
+    const page = await ensureBrowser();
+    if (!page) throw new Error("Failed to initialize browser page");
+    try {
+      await page.locator(args.selector).click();
+      return `Clicked: ${args.selector}`;
+    } catch (error) {
+      if ((error as Error).message.includes("strict mode violation")) {
+        try {
+          await page.locator(args.selector).first().click();
+          return `Clicked: ${args.selector}`;
+        } catch (error) {
+          throw new Error(
+            `Failed (twice) to click ${args.selector}: ${
+              (error as Error).message
+            }`
+          );
+        }
+      }
+      throw new Error(
+        `Failed to click ${args.selector}: ${(error as Error).message}`
+      );
+    }
+  },
+});
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: TOOLS,
-  }));
+server.addTool({
+  name: "browser_click_text",
+  description: "Click an element on the page by its text content",
+  parameters: z.object({
+    text: z.string(),
+  }),
+  execute: async (args) => {
+    const page = await ensureBrowser();
+    if (!page) throw new Error("Failed to initialize browser page");
+    try {
+      await page.getByText(args.text).click();
+      return `Clicked element with text: ${args.text}`;
+    } catch (error) {
+      if ((error as Error).message.includes("strict mode violation")) {
+        try {
+          await page.getByText(args.text).first().click();
+          return `Clicked element with text: ${args.text}`;
+        } catch (error) {
+          throw new Error(
+            `Failed (twice) to click element with text ${args.text}: ${
+              (error as Error).message
+            }`
+          );
+        }
+      }
+      throw new Error(
+        `Failed to click element with text ${args.text}: ${
+          (error as Error).message
+        }`
+      );
+    }
+  },
+});
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) =>
-    handleToolCall(
-      request.params.name as ToolName,
-      request.params.arguments ?? {}
-    )
-  );
+server.addTool({
+  name: "browser_fill",
+  description: "Fill out an input field",
+  parameters: z.object({
+    selector: z.string(),
+    value: z.string(),
+  }),
+  execute: async (args) => {
+    const page = await ensureBrowser();
+    if (!page) throw new Error("Failed to initialize browser page");
+    try {
+      await page
+        .locator(args.selector)
+        .pressSequentially(args.value, { delay: 100 });
+      return `Filled ${args.selector} with: ${args.value}`;
+    } catch (error) {
+      if ((error as Error).message.includes("strict mode violation")) {
+        try {
+          await page
+            .locator(args.selector)
+            .first()
+            .pressSequentially(args.value, { delay: 100 });
+          return `Filled ${args.selector} with: ${args.value}`;
+        } catch (error) {
+          throw new Error(
+            `Failed (twice) to fill ${args.selector}: ${
+              (error as Error).message
+            }`
+          );
+        }
+      }
+      throw new Error(
+        `Failed to fill ${args.selector}: ${(error as Error).message}`
+      );
+    }
+  },
+});
+
+server.addTool({
+  name: "browser_select",
+  description:
+    "Select an element on the page with Select tag using CSS selector",
+  parameters: z.object({
+    selector: z.string(),
+    value: z.string(),
+  }),
+  execute: async (args) => {
+    const page = await ensureBrowser();
+    if (!page) throw new Error("Failed to initialize browser page");
+    try {
+      await page.locator(args.selector).selectOption(args.value);
+      return `Selected ${args.selector} with: ${args.value}`;
+    } catch (error) {
+      if ((error as Error).message.includes("strict mode violation")) {
+        try {
+          await page.locator(args.selector).first().selectOption(args.value);
+          return `Selected ${args.selector} with: ${args.value}`;
+        } catch (error) {
+          throw new Error(
+            `Failed (twice) to select ${args.selector}: ${
+              (error as Error).message
+            }`
+          );
+        }
+      }
+      throw new Error(
+        `Failed to select ${args.selector}: ${(error as Error).message}`
+      );
+    }
+  },
+});
+
+server.addTool({
+  name: "browser_select_text",
+  description:
+    "Select an element on the page with Select tag by its text content",
+  parameters: z.object({
+    text: z.string(),
+    value: z.string(),
+  }),
+  execute: async (args) => {
+    const page = await ensureBrowser();
+    if (!page) throw new Error("Failed to initialize browser page");
+    try {
+      await page.getByText(args.text).selectOption(args.value);
+      return `Selected element with text ${args.text} with value: ${args.value}`;
+    } catch (error) {
+      if ((error as Error).message.includes("strict mode violation")) {
+        try {
+          await page.getByText(args.text).first().selectOption(args.value);
+          return `Selected element with text ${args.text} with value: ${args.value}`;
+        } catch (error) {
+          throw new Error(
+            `Failed (twice) to select element with text ${args.text}: ${
+              (error as Error).message
+            }`
+          );
+        }
+      }
+      throw new Error(
+        `Failed to select element with text ${args.text}: ${
+          (error as Error).message
+        }`
+      );
+    }
+  },
+});
+
+server.addTool({
+  name: "browser_hover",
+  description: "Hover an element on the page using CSS selector",
+  parameters: z.object({
+    selector: z.string(),
+  }),
+  execute: async (args) => {
+    const page = await ensureBrowser();
+    if (!page) throw new Error("Failed to initialize browser page");
+    try {
+      await page.locator(args.selector).hover();
+      return `Hovered ${args.selector}`;
+    } catch (error) {
+      if ((error as Error).message.includes("strict mode violation")) {
+        try {
+          await page.locator(args.selector).first().hover();
+          return `Hovered ${args.selector}`;
+        } catch (error) {
+          throw new Error(
+            `Failed to hover ${args.selector}: ${(error as Error).message}`
+          );
+        }
+      }
+      throw new Error(
+        `Failed to hover ${args.selector}: ${(error as Error).message}`
+      );
+    }
+  },
+});
+
+server.addTool({
+  name: "browser_hover_text",
+  description: "Hover an element on the page by its text content",
+  parameters: z.object({
+    text: z.string(),
+  }),
+  execute: async (args) => {
+    const page = await ensureBrowser();
+    if (!page) throw new Error("Failed to initialize browser page");
+    try {
+      await page.getByText(args.text).hover();
+      return `Hovered element with text: ${args.text}`;
+    } catch (error) {
+      if ((error as Error).message.includes("strict mode violation")) {
+        try {
+          await page.getByText(args.text).first().hover();
+          return `Hovered element with text: ${args.text}`;
+        } catch (error) {
+          throw new Error(
+            `Failed (twice) to hover element with text ${args.text}: ${
+              (error as Error).message
+            }`
+          );
+        }
+      }
+      throw new Error(
+        `Failed to hover element with text ${args.text}: ${
+          (error as Error).message
+        }`
+      );
+    }
+  },
+});
+
+server.addTool({
+  name: "browser_evaluate",
+  description: "Execute JavaScript in the browser console",
+  parameters: z.object({
+    script: z.string(),
+  }),
+  execute: async (args) => {
+    const page = await ensureBrowser();
+    if (!page) throw new Error("Failed to initialize browser page");
+    try {
+      const result = await page.evaluate((script) => {
+        const logs: string[] = [];
+        const originalConsole = { ...console };
+
+        ["log", "info", "warn", "error"].forEach((method) => {
+          (console as any)[method] = (...args: any[]) => {
+            logs.push(`[${method}] ${args.join(" ")}`);
+            (originalConsole as any)[method](...args);
+          };
+        });
+
+        try {
+          const result = eval(script);
+          Object.assign(console, originalConsole);
+          return { result, logs };
+        } catch (error) {
+          Object.assign(console, originalConsole);
+          throw error;
+        }
+      }, args.script);
+
+      return `Execution result:\n${JSON.stringify(
+        result.result,
+        null,
+        2
+      )}\n\nConsole output:\n${result.logs.join("\n")}`;
+    } catch (error) {
+      throw new Error(`Script execution failed: ${(error as Error).message}`);
+    }
+  },
+});
+
+// Add resources
+server.addResource({
+  uri: "console://logs",
+  name: "Browser console logs",
+  mimeType: "text/plain",
+  async load() {
+    return {
+      text: consoleLogs.join("\n"),
+    };
+  },
+});
+
+// Start the server
+async function startServer() {
+  // Start screenshot server
+  await screenshotServer.start();
+
+  // Start MCP server
+  await server.start({
+    transportType: "stdio",
+  });
 }
 
-async function checkPlatformAndInstall() {
-  const platform = os.platform();
-  if (platform === "win32") {
-    console.log("Installing MCP Playwright Server for Windows...");
-    try {
-      const configFilePath = path.join(
-        os.homedir(),
-        "AppData",
-        "Roaming",
-        "Claude",
-        "claude_desktop_config.json"
-      );
-
-      let config: any;
-      try {
-        // Try to read existing config file
-        const fileContent = await fs.readFile(configFilePath, "utf-8");
-        config = JSON.parse(fileContent);
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-          // Create new config file with mcpServers object
-          config = { mcpServers: {} };
-          await fs.writeFile(
-            configFilePath,
-            JSON.stringify(config, null, 2),
-            "utf-8"
-          );
-          console.log("Created new Claude config file");
-        } else {
-          console.error("Error reading Claude config file:", error);
-          process.exit(1);
-        }
-      }
-
-      // Ensure mcpServers exists
-      if (!config.mcpServers) {
-        config.mcpServers = {};
-      }
-
-      // Update the playwright configuration
-      config.mcpServers.playwright = {
-        command: "npx",
-        args: ["-y", "@automatalabs/mcp-server-playwright"],
-      };
-
-      // Write the updated config back to file
-      await fs.writeFile(
-        configFilePath,
-        JSON.stringify(config, null, 2),
-        "utf-8"
-      );
-      console.log("✓ Successfully updated Claude configuration");
-    } catch (error) {
-      console.error("Error during installation:", error);
-      process.exit(1);
-    }
-  } else if (platform === "darwin") {
-    console.log("Installing MCP Playwright Server for macOS...");
-    try {
-      const configFilePath = path.join(
-        os.homedir(),
-        "Library",
-        "Application Support",
-        "Claude",
-        "claude_desktop_config.json"
-      );
-
-      let config: any;
-      try {
-        // Try to read existing config file
-        const fileContent = await fs.readFile(configFilePath, "utf-8");
-        config = JSON.parse(fileContent);
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-          // Create new config file with mcpServers object
-          config = { mcpServers: {} };
-          await fs.writeFile(
-            configFilePath,
-            JSON.stringify(config, null, 2),
-            "utf-8"
-          );
-          console.log("Created new Claude config file");
-        } else {
-          console.error("Error reading Claude config file:", error);
-          process.exit(1);
-        }
-      }
-
-      // Ensure mcpServers exists
-      if (!config.mcpServers) {
-        config.mcpServers = {};
-      }
-
-      // Update the playwright configuration
-      config.mcpServers.playwright = {
-        command: "npx",
-        args: ["-y", "@automatalabs/mcp-server-playwright"],
-      };
-
-      // Write the updated config back to file
-      await fs.writeFile(
-        configFilePath,
-        JSON.stringify(config, null, 2),
-        "utf-8"
-      );
-      console.log("✓ Successfully updated Claude configuration");
-    } catch (error) {
-      console.error("Error during installation:", error);
-      process.exit(1);
-    }
-  } else {
-    console.error("Unsupported platform:", platform);
-    process.exit(1);
+// Handle cleanup on exit
+process.on("SIGINT", async () => {
+  if (browser) {
+    await browser.close();
   }
-}
+  await screenshotServer.stop();
+  process.exit(0);
+});
 
-(async () => {
-  try {
-    // Parse args but continue with server if no command specified
-    await yargs(hideBin(process.argv))
-      .command(
-        "install",
-        "Install MCP-Server-Playwright dependencies",
-        () => {},
-        async () => {
-          await checkPlatformAndInstall();
-          // Exit after successful installation
-          process.exit(0);
-        }
-      )
-      .strict()
-      .help()
-      .parse();
-
-    // If we get here, no command was specified, so run the server
-    await runServer().catch(console.error);
-  } catch (error) {
-    console.error("Error:", error);
-    process.exit(1);
-  }
-})();
+// Start the server
+startServer().catch(console.error);

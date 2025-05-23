@@ -1,88 +1,29 @@
-<h1 align="center">MCP Server Playwright</h1>
-<p align="center">
-  <a href="https://www.automatalabs.io"><img alt="MCP Playwright" src="https://automatalabs.io/icon.svg" height="250"/></a>
-</p>
-<p align="center">
-  <b>A Model Context Protocol server that provides browser automation capabilities using Playwright</b></br>
-  <sub>Enable LLMs to interact with web pages, take screenshots, and execute JavaScript in a real browser environment</sub>
-</p>
+# MCP Server Playwright Headless
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/@automatalabs/mcp-server-playwright"><img alt="NPM Version" src="https://img.shields.io/npm/v/@automatalabs/mcp-server-playwright.svg" height="20"/></a>
-  <a href="https://npmcharts.com/compare/@automatalabs/mcp-server-playwright?minimal=true"><img alt="Downloads per month" src="https://img.shields.io/npm/dm/@automatalabs/mcp-server-playwright.svg" height="20"/></a>
-  <a href="https://github.com/Automata-Labs-team/MCP-Server-Playwright/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/Automata-Labs-team/MCP-Server-Playwright.svg" height="20"/></a>
-  <a href="https://smithery.ai/server/@automatalabs/mcp-server-playwright"><img alt="Smithery Installs" src="https://smithery.ai/badge/@automatalabs/mcp-server-playwright" height="20"/></a>
-</p>
-
-<a href="https://glama.ai/mcp/servers/9q4zck8po5"><img width="380" height="200" src="https://glama.ai/mcp/servers/9q4zck8po5/badge" alt="MCP-Server-Playwright MCP server" /></a>
-
-## Table of Contents
-
-- [Features](#features)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Components](#components)
-  - [Tools](#tools)
-  - [Resources](#resources)
-- [License](#license)
+A Model Context Protocol server that provides browser automation capabilities using Playwright in headless mode with Firefox.
 
 ## Features
 
-- 🌐 Full browser automation capabilities
+- 🌐 Full browser automation capabilities using Firefox in headless mode
 - 📸 Screenshot capture of entire pages or specific elements
 - 🖱️ Comprehensive web interaction (navigation, clicking, form filling)
 - 📊 Console log monitoring
 - 🔧 JavaScript execution in browser context
+- 🖼️ Integrated image server for screenshot management
 
 ## Installation
 
-### Installing via Smithery
-
-To install MCP Server Playwright for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@automatalabs/mcp-server-playwright):
+### Using Docker
 
 ```bash
-npx -y @smithery/cli install @automatalabs/mcp-server-playwright --client claude
-```
+# Build the image
+docker build -t mcp-playwright-headless .
 
-You can install the package using either npx or mcp-get:
-
-Using npx:
-
-```bash
-npx @automatalabs/mcp-server-playwright install
-```
-
-This command will:
-
-1. Check your operating system compatibility (Windows/macOS)
-2. Create or update the Claude configuration file
-3. Configure the Playwright server integration
-
-The configuration file will be automatically created/updated at:
-
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-
-Using mcp-get:
-
-```bash
-npx @michaellatman/mcp-get@latest install @automatalabs/mcp-server-playwright
+# Run the container
+docker run --rm --name mcp-playwright -e IMAGE_SERVER=http://host.docker.internal:3001 mcp-playwright-headless:1.3.0
 ```
 
 ## Configuration
-
-The installation process will automatically add the following configuration to your Claude config file:
-
-```json
-{
-  "mcpServers": {
-    "playwright": {
-      "command": "npx",
-      "args": ["-y", "@automatalabs/mcp-server-playwright"]
-    }
-  }
-}
-```
 
 ### Environment Variables
 
@@ -90,45 +31,6 @@ The server supports the following environment variables:
 
 - `IMAGE_SERVER`: URL of an external image server to upload screenshots to
 - `IMAGE_SERVER_TOKEN`: Authentication token for the image server
-
-When these variables are set, screenshots will be automatically uploaded to the specified image server. The server should accept POST requests with:
-
-- A multipart form data body containing an 'image' field
-- An 'Authorization' header with the token
-- Return a JSON response with a 'url' field containing the uploaded image URL
-
-If the image server is not configured or upload fails, screenshots will be saved locally in the `screenshots` directory.
-
-## Image Server
-
-The project includes a standalone image server that can be used to host screenshots. To use it:
-
-1. Build and start the image server:
-
-```bash
-# Development mode
-npm run image-server:dev
-
-# Production mode
-npm run image-server:build
-npm run image-server:start
-```
-
-2. Using Docker:
-
-```bash
-# Build the image
-docker build -t mcp-image-server -f image-server/Dockerfile .
-
-# Run the container
-docker run -p 3001:3001 -v $(pwd)/uploads:/app/uploads mcp-image-server
-```
-
-The image server provides the following endpoints:
-
-- `POST /upload`: Upload an image file
-- `GET /uploads/:filename`: Access uploaded images
-- `GET /health`: Health check endpoint
 
 ## Components
 
@@ -140,7 +42,7 @@ Navigate to any URL in the browser
 
 ```javascript
 {
-  "url": "https://stealthbrowser.cloud"
+  "url": "https://example.com"
 }
 ```
 
@@ -150,9 +52,9 @@ Capture screenshots of the entire page or specific elements
 
 ```javascript
 {
-  "name": "screenshot-name",     // required
-  "selector": "#element-id",     // optional
-  "fullPage": true              // optional, default: false
+  "name": "screenshot-name",     // required: name for the screenshot
+  "selector": "#element-id",     // optional: CSS selector for element screenshot
+  "fullPage": false             // optional: capture full page, default: false
 }
 ```
 
@@ -176,6 +78,39 @@ Click elements on the page by their text content
 }
 ```
 
+#### `browser_fill`
+
+Fill out an input field
+
+```javascript
+{
+  "selector": "#input-field",
+  "value": "text to input"
+}
+```
+
+#### `browser_select`
+
+Select an option from a dropdown using CSS selector
+
+```javascript
+{
+  "selector": "#dropdown",
+  "value": "option-value"
+}
+```
+
+#### `browser_select_text`
+
+Select an option from a dropdown by its text content
+
+```javascript
+{
+  "text": "Option Text",
+  "value": "option-value"
+}
+```
+
 #### `browser_hover`
 
 Hover over elements on the page using CSS selector
@@ -196,60 +131,70 @@ Hover over elements on the page by their text content
 }
 ```
 
-#### `browser_fill`
-
-Fill out input fields
-
-```javascript
-{
-  "selector": "#input-field",
-  "value": "Hello World"
-}
-```
-
-#### `browser_select`
-
-Select an option in a SELECT element using CSS selector
-
-```javascript
-{
-  "selector": "#dropdown",
-  "value": "option-value"
-}
-```
-
-#### `browser_select_text`
-
-Select an option in a SELECT element by its text content
-
-```javascript
-{
-  "text": "Choose me",
-  "value": "option-value"
-}
-```
-
 #### `browser_evaluate`
 
-Execute JavaScript in the browser console
+Execute JavaScript in the browser context
 
 ```javascript
 {
-  "script": "document.title"
+  "script": "document.querySelector('#element').innerText"
+}
+```
+
+#### `delete_screenshot`
+
+Delete a specific screenshot from the image server
+
+```javascript
+{
+  "filename": "screenshot-name.png"
+}
+```
+
+#### `clear_screenshots`
+
+Clear all screenshots from the image server
+
+```javascript
+{
 }
 ```
 
 ### Resources
 
-1. **Console Logs** (`console://logs`)
+#### `console://logs`
 
-   - Access browser console output in text format
-   - Includes all console messages from the browser
+Access browser console logs captured during automation
 
-2. **Screenshots** (`screenshot://<n>`)
-   - Access PNG images of captured screenshots
-   - Referenced by the name specified during capture
+## Image Server
+
+The project includes a standalone image server for managing screenshots. To use it:
+
+1. Build and start the image server:
+
+```bash
+# Build the image
+docker build -t mcp-image-server -f image-server/Dockerfile .
+
+# Run the container
+docker run -d -p 3001:3001 --name image-server mcp-image-server:1.0.0
+```
+
+The image server provides automatic screenshot management with:
+
+- Automatic upload of screenshots
+- Screenshot deletion capabilities
+- Bulk screenshot clearing
+- Local fallback if image server is unavailable
+
+## Error Handling
+
+The server includes comprehensive error handling:
+
+- Automatic retries for strict mode violations
+- Fallback mechanisms for screenshot storage
+- Detailed error messages for debugging
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/Automata-Labs-team/MCP-Server-Playwright/blob/main/LICENSE) file for details.
+MIT

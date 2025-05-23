@@ -47,19 +47,24 @@ npx -y @smithery/cli install @automatalabs/mcp-server-playwright --client claude
 You can install the package using either npx or mcp-get:
 
 Using npx:
+
 ```bash
 npx @automatalabs/mcp-server-playwright install
 ```
+
 This command will:
+
 1. Check your operating system compatibility (Windows/macOS)
 2. Create or update the Claude configuration file
 3. Configure the Playwright server integration
 
 The configuration file will be automatically created/updated at:
+
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
 Using mcp-get:
+
 ```bash
 npx @michaellatman/mcp-get@latest install @automatalabs/mcp-server-playwright
 ```
@@ -79,12 +84,60 @@ The installation process will automatically add the following configuration to y
 }
 ```
 
+### Environment Variables
+
+The server supports the following environment variables:
+
+- `IMAGE_SERVER`: URL of an external image server to upload screenshots to
+- `IMAGE_SERVER_TOKEN`: Authentication token for the image server
+
+When these variables are set, screenshots will be automatically uploaded to the specified image server. The server should accept POST requests with:
+
+- A multipart form data body containing an 'image' field
+- An 'Authorization' header with the token
+- Return a JSON response with a 'url' field containing the uploaded image URL
+
+If the image server is not configured or upload fails, screenshots will be saved locally in the `screenshots` directory.
+
+## Image Server
+
+The project includes a standalone image server that can be used to host screenshots. To use it:
+
+1. Build and start the image server:
+
+```bash
+# Development mode
+npm run image-server:dev
+
+# Production mode
+npm run image-server:build
+npm run image-server:start
+```
+
+2. Using Docker:
+
+```bash
+# Build the image
+docker build -t mcp-image-server -f image-server/Dockerfile .
+
+# Run the container
+docker run -p 3001:3001 -v $(pwd)/uploads:/app/uploads mcp-image-server
+```
+
+The image server provides the following endpoints:
+
+- `POST /upload`: Upload an image file
+- `GET /uploads/:filename`: Access uploaded images
+- `GET /health`: Health check endpoint
+
 ## Components
 
 ### Tools
 
 #### `browser_navigate`
+
 Navigate to any URL in the browser
+
 ```javascript
 {
   "url": "https://stealthbrowser.cloud"
@@ -92,7 +145,9 @@ Navigate to any URL in the browser
 ```
 
 #### `browser_screenshot`
+
 Capture screenshots of the entire page or specific elements
+
 ```javascript
 {
   "name": "screenshot-name",     // required
@@ -102,7 +157,9 @@ Capture screenshots of the entire page or specific elements
 ```
 
 #### `browser_click`
+
 Click elements on the page using CSS selector
+
 ```javascript
 {
   "selector": "#button-id"
@@ -110,7 +167,9 @@ Click elements on the page using CSS selector
 ```
 
 #### `browser_click_text`
+
 Click elements on the page by their text content
+
 ```javascript
 {
   "text": "Click me"
@@ -118,7 +177,9 @@ Click elements on the page by their text content
 ```
 
 #### `browser_hover`
+
 Hover over elements on the page using CSS selector
+
 ```javascript
 {
   "selector": "#menu-item"
@@ -126,7 +187,9 @@ Hover over elements on the page using CSS selector
 ```
 
 #### `browser_hover_text`
+
 Hover over elements on the page by their text content
+
 ```javascript
 {
   "text": "Hover me"
@@ -134,7 +197,9 @@ Hover over elements on the page by their text content
 ```
 
 #### `browser_fill`
+
 Fill out input fields
+
 ```javascript
 {
   "selector": "#input-field",
@@ -143,7 +208,9 @@ Fill out input fields
 ```
 
 #### `browser_select`
+
 Select an option in a SELECT element using CSS selector
+
 ```javascript
 {
   "selector": "#dropdown",
@@ -152,7 +219,9 @@ Select an option in a SELECT element using CSS selector
 ```
 
 #### `browser_select_text`
+
 Select an option in a SELECT element by its text content
+
 ```javascript
 {
   "text": "Choose me",
@@ -161,7 +230,9 @@ Select an option in a SELECT element by its text content
 ```
 
 #### `browser_evaluate`
+
 Execute JavaScript in the browser console
+
 ```javascript
 {
   "script": "document.title"
@@ -171,6 +242,7 @@ Execute JavaScript in the browser console
 ### Resources
 
 1. **Console Logs** (`console://logs`)
+
    - Access browser console output in text format
    - Includes all console messages from the browser
 

@@ -8,8 +8,8 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies without running prepare script
+RUN npm install --production=false --ignore-scripts
 
 # Copy the rest of the application code
 COPY . .
@@ -24,8 +24,12 @@ FROM node:20-slim AS release
 WORKDIR /app
 
 # Copy the built application from the builder stage
-COPY --from=builder /app/dist /app/dist
-COPY --from=builder /app/package.json /app/package-lock.json /app/node_modules ./
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package-lock.json ./package-lock.json
+
+# Install only production dependencies
+RUN npm install --production --ignore-scripts
 
 # Define the entry point for the Docker container
 ENTRYPOINT ["node", "dist/index.js"]

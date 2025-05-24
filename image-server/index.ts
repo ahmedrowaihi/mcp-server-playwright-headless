@@ -10,6 +10,7 @@ dotenv.config();
 const app = express();
 const host = process.env.HOST || "localhost";
 const port = process.env.PORT || 3001;
+const SERVER_URL = process.env.SERVER_URL || `http://${host}:${port}`;
 const token = process.env.IMAGE_SERVER_TOKEN;
 const uploadsDir = path.join(process.cwd(), "uploads");
 
@@ -79,7 +80,7 @@ app.post("/upload", authenticate, upload.single("image"), async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const fileUrl = `${req.protocol}://${host}:${port}/uploads/${req.file.filename}`;
+    const fileUrl = SERVER_URL + `/uploads/${req.file.filename}`;
     res.json({ url: fileUrl });
   } catch (error) {
     console.error("Upload error:", error);
